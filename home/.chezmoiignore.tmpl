@@ -1,0 +1,20 @@
+README.md
+key.txt.age
+.rmembid
+.config/beets/state.pickle
+.config/zsh/.zcompdump
+.config/zsh/.zsh_history
+
+{{ if eq .chezmoi.os "darwin" }}
+.DS_Store
+**/.DS_Store
+{{ end }}
+
+{{ if ne .chezmoi.os "darwin" }}
+Library
+.chezmoiscripts/darwin/**
+{{ end }}
+
+{{ if eq .chezmoi.os "windows" }}
+.hushlogin
+{{ end }}

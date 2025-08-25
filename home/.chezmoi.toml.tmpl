@@ -1,0 +1,29 @@
+{{- $name := promptStringOnce . "name" "Name" -}}
+{{- $email := promptStringOnce . "email" "Email address" -}}
+{{- $location := promptChoiceOnce . "location" "Location" (list "home" "work") "work" -}}
+
+{{- $gaming := promptBoolOnce . "profiles.gaming" "Enable gaming features" false -}}
+{{- $encoding := promptBoolOnce . "profiles.encoding" "Include encoding and production tools and settings" false -}}
+{{- $server := promptBoolOnce . "profiles.server" "Configure device as server" false -}}
+
+{{- $ephemeral := false -}}
+{{- $headless := false -}}
+
+{{- $signingKey:= "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBPODogvXnAeUtHqgfj5uCCXh95Ra+quPhmuYWaUivGyC98log+ti8Pz4TN9NkdDw+1nGRKXx766l0eG19rcBHkE=" -}}
+
+[data]
+name = {{ $name | quote }}
+email = {{ $email | quote }}
+location = {{ $location | quote }}
+signingKey = {{ $signingKey | quote }}
+
+[data.homebrew]
+prefix = "{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}"
+
+[data.flags]
+ephemeral = {{ $ephemeral }}
+
+[data.profiles]
+gaming = {{ $gaming }}
+encoding = {{ $encoding }}
+server = {{ $server }}

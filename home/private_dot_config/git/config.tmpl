@@ -1,0 +1,20 @@
+[user]
+name = {{ .name }}
+email = {{ .email }}
+signingKey = "key::{{ .signingKey }}"
+
+[commit]
+gpgsign = true
+
+[gpg]
+format = ssh
+
+[gpg.ssh]
+allowedSignersFile = ~/.ssh/allowed_signers
+defaultKeyCommand = ssh-add -L
+
+[init]
+defaultBranch = main
+
+[tag]
+gpgsign = true

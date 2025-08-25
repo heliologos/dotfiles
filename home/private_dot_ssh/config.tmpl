@@ -1,0 +1,4 @@
+{{ if eq .location "home" -}}
+Host *
+  IdentityAgent {{ .chezmoi.homeDir }}/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
+{{ end }}
