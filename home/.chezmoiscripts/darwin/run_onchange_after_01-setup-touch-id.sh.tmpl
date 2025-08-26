@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+set -eufo pipefail
+
+TOUCH_ID_CONFIG="auth       sufficient     pam_tid.so"
+PAM_SUDO_FILE="/etc/pam.d/sudo"
+
+# Check if the Touch ID configuration line is already in the sudo PAM configuration
+if ! grep -q "$TOUCH_ID_CONFIG" "$PAM_SUDO_FILE"; then
+  # If the line isn't present, prepend it to the file
+  echo "Adding Touch ID support to $PAM_SUDO_FILE..."
+  sudo cp "$PAM_SUDO_FILE" "$PAM_SUDO_FILE.bak" && \
+  echo -e "$TOUCH_ID_CONFIG\n$(cat "$PAM_SUDO_FILE")" | sudo tee "$PAM_SUDO_FILE" > /dev/null
+else
+  echo "Touch ID support is already enabled in $PAM_SUDO_FILE."
+fi
+
