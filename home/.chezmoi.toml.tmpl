@@ -2,6 +2,7 @@
 {{- $email := promptStringOnce . "email" "Email address" -}}
 {{- $location := promptChoiceOnce . "location" "Location" (list "home" "work") "work" -}}
 
+{{- $developer := promptBoolOnce . "profiles.developer" "Include developer tools" true -}}
 {{- $gaming := promptBoolOnce . "profiles.gaming" "Enable gaming features" false -}}
 {{- $encoding := promptBoolOnce . "profiles.encoding" "Include encoding and production tools and settings" false -}}
 {{- $server := promptBoolOnce . "profiles.server" "Configure device as server" false -}}
@@ -24,6 +25,7 @@ prefix = "{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ e
 ephemeral = {{ $ephemeral }}
 
 [data.profiles]
+developer = {{ $developer }}
 gaming = {{ $gaming }}
 encoding = {{ $encoding }}
 server = {{ $server }}
