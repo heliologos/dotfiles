@@ -1,14 +1,3 @@
-abbr -g "b"="brew"
-abbr -g "bi"="brew install"
-abbr -g "brci"="brew install --cask"
-abbr -g "brcu"="brew uninstall --cask"
-abbr -g "brcz"="brew uninstall --cask --zap"
-abbr -g "bz"="brew uninstall --zap"
-abbr -g "ci"="brew install --cask"
-abbr -g "cz"="chezmoi"
-abbr -g "cdd"="chezmoi cd ~"
-abbr -g "dp"="chezmoi apply -v"
-abbr -g "ll"="ls -l"
-abbr -g "la"="ls -al"
-abbr -g "gg"="lazygit"
-abbr -g "md"="mkdir -p"
+{{- range .abbreviations }}
+abbr -g "{{ .key }}"="{{ .value }}"
+{{- end }}

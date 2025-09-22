@@ -1,6 +1,7 @@
 {{- $name := promptStringOnce . "name" "Name" -}}
 {{- $email := promptStringOnce . "email" "Email address" -}}
 {{- $location := promptChoiceOnce . "location" "Location" (list "home" "work") "work" -}}
+{{- $shell := promptChoiceOnce . "defaults.shell" "Default shell" (list "zsh" "fish") "fish" -}}
 
 {{- $developer := promptBoolOnce . "profiles.developer" "Include developer tools" true -}}
 {{- $gaming := promptBoolOnce . "profiles.gaming" "Enable gaming features" false -}}
@@ -17,6 +18,9 @@ name = {{ $name | quote }}
 email = {{ $email | quote }}
 location = {{ $location | quote }}
 signingKey = {{ $signingKey | quote }}
+
+[data.defaults]
+shell = {{ $shell | quote }}
 
 [data.homebrew]
 prefix = "{{ if eq .chezmoi.arch "arm64" }}/opt/homebrew{{ else }}/usr/local{{ end }}"

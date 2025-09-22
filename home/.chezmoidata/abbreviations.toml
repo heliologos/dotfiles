@@ -1,0 +1,59 @@
+[[abbreviations]]
+key = "b"
+value = "brew"
+
+[[abbreviations]]
+key = "bi"
+value = "brew install"
+
+[[abbreviations]]
+key = "brci"
+value = "brew install --cask"
+
+[[abbreviations]]
+key = "brcu"
+value = "brew uninstall --cask"
+
+[[abbreviations]]
+key = "brcz"
+value = "brew uninstall --cask --zap"
+
+[[abbreviations]]
+key = "bz"
+value = "brew uninstall --zap"
+
+[[abbreviations]]
+key = "ci"
+value = "brew install --cask"
+
+[[abbreviations]]
+key = "cz"
+value = "chezmoi"
+
+[[abbreviations]]
+key = "cdd"
+value = "chezmoi cd ~"
+
+[[abbreviations]]
+key = "dp"
+value = "chezmoi apply -v"
+
+[[abbreviations]]
+key = "ll"
+value = "ls -l"
+
+[[abbreviations]]
+key = "la"
+value = "ls -al"
+
+[[abbreviations]]
+key = "gg"
+value = "lazygit"
+
+[[abbreviations]]
+key = "md"
+value = "mkdir -p"
+
+[[abbreviations]]
+key = "e"
+value = "nvim"

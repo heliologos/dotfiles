@@ -1,0 +1,26 @@
+{{- if eq .defaults.shell "fish" -}}
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+# Ensure fish is registered and set as the login shell when configured.
+if ! command -v fish >/dev/null 2>&1; then
+  echo "fish shell is not installed; skipping default shell change."
+  exit 0
+fi
+
+fish_path="$(command -v fish)"
+current_shell="$(dscl . -read "/Users/${USER}" UserShell | awk '{print $2}')"
+
+if [[ "${current_shell}" == "${fish_path}" ]]; then
+  exit 0
+fi
+
+if ! grep -qx "${fish_path}" /etc/shells; then
+  echo "Adding ${fish_path} to /etc/shells"
+  echo "${fish_path}" | sudo tee -a /etc/shells >/dev/null
+fi
+
+echo "Setting login shell to fish for ${USER}"
+sudo chsh -s "${fish_path}" "${USER}"
+{{- end -}}

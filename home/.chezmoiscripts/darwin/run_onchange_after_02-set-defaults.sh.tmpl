@@ -237,6 +237,13 @@ defaults write com.apple.mail DisableInlineAttachmentViewing -bool true
 defaults write com.apple.mail SpellCheckingBehavior -string "NoSpellCheckingEnabled"
 
 # ----------------------------------------------------------------------------
+# iTerm2
+# ----------------------------------------------------------------------------
+
+defaults write com.googlecode.iterm2 "PrefsCustomFolder" -string "$HOME/.config/iterm2/"
+defaults write com.googlecode.iterm2 "LoadPrefsFromCustomFolder" -bool true
+
+# ----------------------------------------------------------------------------
 # Kill all apps
 # ----------------------------------------------------------------------------
 
