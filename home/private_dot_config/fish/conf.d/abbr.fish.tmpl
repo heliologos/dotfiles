@@ -2,17 +2,18 @@ if status is-interactive
     {{- $hasEza := lookPath "eza" }}
     # Prefer eza for ls-style abbreviations when available.
     {{- range .abbreviations }}
-        {{- $value := .value }}
-        {{- if $hasEza }}
-            {{- if eq .key "ll" }}
-                {{- $value = "eza --long --group-directories-first --git" }}
-            {{- else if eq .key "la" }}
-                {{- $value = "eza --long --all --group-directories-first --git" }}
-            {{- end }}
-        {{- end }}
+    {{- $value := .value }}
+    {{- if $hasEza }}
+    {{- if eq .key "ll" }}
+    {{- $value = "eza --long --group-directories-first --git --no-quotes" }}
+    {{- else if eq .key "la" }}
+    {{- $value = "eza --long --all --group-directories-first --git --no-quotes" }}
+    {{- end }}
+    {{- end }}
     abbr --add --global {{ .key }} "{{ $value }}"
     {{- end }}
     {{- if $hasEza }}
-    abbr --add --global ls "eza --group-directories-first --git"
+    abbr --add --global ls "eza --group-directories-first --git --no-quotes"
+    abbr --add --global l "eza --long --all --group-directories-first --git --no-quotes"
     {{- end }}
 end
