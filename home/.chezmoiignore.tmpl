@@ -13,6 +13,7 @@ key.txt.age
 {{ if ne .chezmoi.os "darwin" }}
 Library
 .chezmoiscripts/darwin/**
+.warp
 {{ end }}
 
 {{ if eq .chezmoi.os "windows" }}
