@@ -1,0 +1,24 @@
+[packages.darwin]
+brews = [
+  "bat",
+  "chezmoi",
+  "dockutil",
+  "duti",
+  "fish",
+  "fd",
+  "helix",
+  "lazygit",
+  "mise",
+  "neovim",
+  "rage",
+  "yazi",
+  "zimfw",
+  "zoxide"
+]
+
+casks = [
+  "font-jetbrains-mono-nerd-font",
+  "neovide-app",
+  "raycast",
+  "warp"
+]
