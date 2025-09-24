@@ -1,0 +1,13 @@
+# Setting up the path
+set -e fish_user_paths
+
+# Homebrew
+set -gx HOMEBREW_PREFIX {{ .homebrew.prefix }}
+set -gx HOMEBREW_CELLAR {{ .homebrew.prefix }}/Cellar
+set -gx HOMEBREW_REPOSITORY {{ .homebrew.prefix }}
+set -q PATH; or set PATH ''
+set -gx PATH {{ .homebrew.prefix }}/bin {{ .homebrew.prefix }}/sbin $PATH
+set -q MANPATH; or set MANPATH ''
+set -gx MANPATH {{ .homebrew.prefix }}/share/man $MANPATH
+set -q INFOPATH; or set INFOPATH ''
+set -gx INFOPATH {{ .homebrew.prefix }}/share/info $INFOPATH
