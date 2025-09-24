@@ -1,20 +1,39 @@
 return {
-  "folke/snacks.nvim",
-  opts = {
-    picker = {
-      hidden = true, -- for hidden files
-      ignored = true, -- for .gitignore files
-      win = {
-        list = {
-          keys = {
-            ["<Tab>"] = "confirm",
+  {
+    "folke/snacks.nvim",
+    opts = {
+      picker = {
+        hidden = true,
+        ignored = true,
+        sources = {
+          files = {
+            hidden = true,
+            ignored = true,
+            exclude = {
+              "**/.DS_Store",
+              "**/node_modules/**",
+            },
           },
         },
+        win = {
+          list = { keys = {
+            ["<Tab>"] = "confirm",
+          } },
+        },
       },
-    },
-    explorer = {
-      files = {
+      explorer = {
         hidden = true,
+        ignored = true,
+        sources = {
+          files = {
+            hidden = true,
+            ignored = true,
+            exclude = {
+              "**/.DS_Store",
+              "**/node_modules/**",
+            },
+          },
+        },
       },
     },
   },
