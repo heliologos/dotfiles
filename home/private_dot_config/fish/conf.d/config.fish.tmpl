@@ -2,3 +2,7 @@ set -g fish_greeting ""
 fish_vi_key_bindings
 
 set -x SSH_AUTH_SOCK /Users/admin/Library/Containers/com.maxgoedjen.Secretive.SecretAgent/Data/socket.ssh
+
+{{ if lookPath "zoxide" -}}
+zoxide init fish | source
+{{ end }}
