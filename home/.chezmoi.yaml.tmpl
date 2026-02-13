@@ -1,0 +1,15 @@
+{{- $profile := promptChoiceOnce . "profile" "What environment are you in" (list "home" "work") "work" -}}
+{{- $name := "" -}}
+{{- $email := "" -}}
+{{- if eq $profile "work" -}}
+  {{- $name = or (env "WORK_NAME") (promptStringOnce . "work.name" "What is your work name") -}}
+  {{- $email = or (env "WORK_EMAIL") (promptStringOnce . "work.email" "What is your work email") -}}
+{{- else -}}
+  {{- $name = "heliologos" -}}
+  {{- $email = "sol@hey.com" -}}
+{{- end -}}
+
+data:
+  profile: {{ $profile | quote }}
+  name: {{ $name | quote }}
+  email: {{ $email | quote }}
