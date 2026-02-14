@@ -2,6 +2,9 @@
 {{ if has "go" .toolchains -}}
 go = "latest"
 {{- end }}
+{{ if has "node" .toolchains -}}
+node = "latest"
+{{- end }}
 {{ if has "python" .toolchains -}}
 python = "latest"
 {{- end }}

@@ -84,3 +84,17 @@ zstyle ':zim:ssh' ids 'id_ed25519'
 if (( $+commands[mise] )); then
   eval "$(mise activate zsh)"
 fi
+
+{{ if lookPath "zoxide" -}}
+eval "$(zoxide init zsh)"
+{{ end }}
+
+{{ if lookPath "yazi" -}}
+y() {
+	local tmp="$(mktemp -t "yazi-cwd.XXXXXX")" cwd
+	command yazi "$@" --cwd-file="$tmp"
+	IFS= read -r -d '' cwd < "$tmp"
+	[ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
+	rm -f -- "$tmp"
+}
+{{ end }}

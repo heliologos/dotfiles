@@ -9,7 +9,10 @@ packages:
         - lazygit
         - mise
         - tealdeer
+        - yazi
+        - zellij
         - zimfw
+        - zoxide
       casks: []
 
   profiles:
@@ -22,11 +25,5 @@ packages:
             - mise
           casks:
             - brave-browser
-            - kitty
+            - ghostty
             - 1password
-    work:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []

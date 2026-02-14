@@ -58,6 +58,11 @@ export GNUPGHOME="{{ .xdg.configHome }}/gnupg"
 export LESSHISTFILE="{{ .xdg.stateHome }}/less/history"
 export WGETRC="{{ .xdg.configHome }}/wget/wgetrc"
 export TEALDEER_CONFIG_DIR="{{ .xdg.configHome }}/tealdeer"
+export CARGO_HOME="{{ .xdg.dataHome }}/cargo"
+export NPM_CONFIG_USERCONFIG="{{ .xdg.configHome }}/npm/npmrc"
+export NPM_CONFIG_CACHE="{{ .xdg.cacheHome }}/npm"
+export NPM_CONFIG_PREFIX="{{ .xdg.dataHome }}/npm"
+export RUSTUP_HOME="{{ .xdg.dataHome }}/rustup"
 
 # ------------------------------------------------------------------------------
 # 6. Plugins and cache management
