@@ -1,4 +1,5 @@
 home/private_dot_config/git/config-work
+home/private_dot_ssh/config-work
 install/macos/work/homebrew-install-internal.sh
 install/macos/work/install-homebrew-packages.sh
 .DS_Store

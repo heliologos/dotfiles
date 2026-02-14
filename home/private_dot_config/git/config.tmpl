@@ -1,22 +1,23 @@
 [user]
   name = {{ .name }}
   email = {{ .email }}
+{{- if eq .profile "home" }}
   signingkey = {{ .signing_key }}
+{{- end }}
 
 [color]
   ui = auto
 
-[gpg]
-  format = ssh
-{{ if eq .defaults.password_manager "1password" }}
-[gpg "ssh"]
-  program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
-  allowedSignersFile = {{ .chezmoi.homeDir }}/.ssh/allowed_signers
-{{- end }}
-
 [commit]
   gpgsign = true
-{{ if eq .profile "work" }}
-[includeIf "gitdir:~/git/work"]
-  path = ~/.config/git/config-work
+
+{{ if eq .profile "work" -}}
+[include]
+  file = ~/.config/git/config-work
+
+[includeIf "gitdir:~/git/personal/"]
+  path = ~/.config/git/config-personal
+{{- else -}}
+[include]
+  file = ~/.config/git/config-personal
 {{- end }}
