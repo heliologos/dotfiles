@@ -1,3 +1,9 @@
 .viminfo
 .zsh_history
 .zsh_sessions
+{{ if not (has "fish" .programs.shells) }}
+.config/fish
+{{ end }}
+{{ if not (has "nushell" .programs.shells) }}
+.config/nushell
+{{ end }}
