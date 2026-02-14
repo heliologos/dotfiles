@@ -1,4 +1,11 @@
+{{- if ne .defaults.password_manager "1password" }}
+.local/state/1password/agent.sock
+{{- end }}
 {{ if ne .chezmoi.os "darwin" -}}
 .hushlogin
 {{ end -}}
+.config/git/config-work.age
+{{- if ne .profile "work" }}
+.config/git/config-work
+{{- end }}
 key.txt.age

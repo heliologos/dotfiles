@@ -1,0 +1,3 @@
+{{- if eq .profile "work" -}}
+{{ include "private_dot_config/git/config-work.age" | decrypt -}}
+{{- end -}}

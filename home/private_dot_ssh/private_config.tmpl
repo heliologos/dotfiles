@@ -1,0 +1,7 @@
+Host *
+  IgnoreUnknown UseKeychain,AddKeysToAgent{{ if and (ne .chezmoi.os "windows") (eq .defaults.password_manager "1password") }},IdentityAgent{{ end }}
+  UseKeychain yes
+  AddKeysToAgent yes
+{{- if and (ne .chezmoi.os "windows") (eq .defaults.password_manager "1password") }}
+  IdentityAgent "{{ .chezmoi.homeDir }}/.local/state/1password/agent.sock"
+{{- end }}
