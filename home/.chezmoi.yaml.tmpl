@@ -2,14 +2,56 @@
 {{- $name := "" -}}
 {{- $email := "" -}}
 {{- if eq $profile "work" -}}
-  {{- $name = or (env "WORK_NAME") (promptStringOnce . "work.name" "What is your work name") -}}
-  {{- $email = or (env "WORK_EMAIL") (promptStringOnce . "work.email" "What is your work email") -}}
+  {{- $name = or (env "WORK_NAME") (promptStringOnce . "name" "What is your work name") -}}
+  {{- $email = or (env "WORK_EMAIL") (promptStringOnce . "email" "What is your work email") -}}
 {{- else -}}
   {{- $name = "heliologos" -}}
   {{- $email = "sol@hey.com" -}}
 {{- end -}}
 
+{{- $availableBrowsers := list "brave" "safari" -}}
+{{- $availableTerminals := list "kitty" "alacritty" "wezterm" "iterm2" -}}
+{{- $availableEditors := list "nvim" "vim" "emacs" "vscode" "zed" -}}
+{{- $availablePasswordManagers := list "1password" "bitwarden" "proton-pass" -}}
+{{- $availableToolchains := list "mise" "python" "rust" -}}
+
+{{- /* default programs: single choice per category */ -}}
+{{- $shell := "/bin/zsh" -}}
+{{- $browser := promptChoiceOnce . "defaults.browser" "Default browser" $availableBrowsers "brave" -}}
+{{- $terminal := promptChoiceOnce . "defaults.terminal" "Primary terminal" $availableTerminals "kitty" -}}
+{{- $editor := promptChoiceOnce . "defaults.editor" "Primary editor" $availableEditors "nvim" -}}
+{{- $passwordManager := promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
+
+{{- /* optional programs: multiple selections */ -}}
+{{- $enabledPasswordManagers := promptMultichoiceOnce . "programs.password_managers" "Enable password managers" $availablePasswordManagers (list $passwordManager) -}}
+{{- $enabledTerminals := promptMultichoiceOnce . "programs.terminals" "Enable terminals" $availableTerminals (list $terminal) -}}
+{{- $enabledEditors := promptMultichoiceOnce . "programs.editors" "Enable editors" $availableEditors (list $editor) -}}
+{{- $enabledToolchains := promptMultichoiceOnce . "toolchains" "Enable language toolchains" $availableToolchains (list) -}}
+
+{{- $xdgConfigHome := env "XDG_CONFIG_HOME" | default (printf "%s/.config" .chezmoi.homeDir) -}}
+{{- $xdgCacheHome := env "XDG_CACHE_HOME" | default (printf "%s/.cache" .chezmoi.homeDir) -}}
+{{- $xdgDataHome := env "XDG_DATA_HOME" | default (printf "%s/.local/share" .chezmoi.homeDir) -}}
+{{- $xdgStateHome := env "XDG_STATE_HOME" | default (printf "%s/.local/state" .chezmoi.homeDir) -}}
+{{- $xdgBinHome := env "XDG_BIN_HOME" | default (printf "%s/.local/bin" .chezmoi.homeDir) -}}
+
 data:
-  profile: {{ $profile | quote }}
   name: {{ $name | quote }}
   email: {{ $email | quote }}
+  profile: {{ $profile | quote }}
+  defaults:
+    shell: {{ $shell | quote }}
+    browser: {{ $browser | quote }}
+    terminal: {{ $terminal | quote }}
+    editor: {{ $editor | quote }}
+    password_manager: {{ $passwordManager | quote }}
+  programs:
+    password_managers: {{ $enabledPasswordManagers | toJson }}
+    terminals: {{ $enabledTerminals | toJson }}
+    editors: {{ $enabledEditors | toJson }}
+  toolchains: {{ $enabledToolchains | toJson }}
+  xdg:
+    configHome: {{ $xdgConfigHome | quote }}
+    cacheHome: {{ $xdgCacheHome | quote }}
+    dataHome: {{ $xdgDataHome | quote }}
+    stateHome: {{ $xdgStateHome | quote }}
+    binHome: {{ $xdgBinHome | quote }}

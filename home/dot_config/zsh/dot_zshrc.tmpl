@@ -1,0 +1,86 @@
+# ============================================================================
+# Interactive shell safety check
+# ============================================================================
+# If not running interactively, stop here.
+# (This prevents SCP/SFTP connections from breaking due to echoed text)
+[[ $- != *i* ]] && return
+
+# ============================================================================
+# Path configuration (append/prepend only)
+# ============================================================================
+# Note: Basic XDG paths and typeset -U path were handled in .zshenv
+
+# Add Homebrew to path if it exists
+if [[ -x "/opt/homebrew/bin/brew" ]]; then
+  path=(
+    "/opt/homebrew/bin"
+    "/opt/homebrew/sbin"
+    $path
+  )
+fi
+
+# ============================================================================
+# Options
+# ============================================================================
+
+# History
+[[ -d "{{ .xdg.stateHome }}/zsh" ]] || mkdir -p "{{ .xdg.stateHome }}/zsh"
+export HISTFILE="$ZDOTDIR/history"
+export HISTSIZE=100000
+export SAVEHIST=100000
+
+setopt APPEND_HISTORY INC_APPEND_HISTORY EXTENDED_HISTORY
+setopt HIST_IGNORE_ALL_DUPS HIST_FIND_NO_DUPS HIST_IGNORE_SPACE
+setopt HIST_VERIFY HIST_REDUCE_BLANKS
+
+# Navigation
+setopt AUTO_CD AUTO_PUSHD PUSHD_SILENT PUSHD_IGNORE_DUPS
+setopt EXTENDED_GLOB GLOB_DOTS
+setopt NO_BEEP INTERACTIVE_COMMENTS
+unsetopt NOMATCH
+
+# ============================================================================
+# Aliases
+# ============================================================================
+
+if ! (( $+functions[abbr] )); then
+  alias ll="ls -al"
+fi
+
+{{ if lookPath "eza" -}}
+alias ls='eza --icons'                                   # ls
+alias l='eza -lbF --git --icons'                         # list, size, type, git
+alias ll='eza -lbGF --git --icons'                       # long list
+alias ltr='eza -lbGd --git --sort=modified --icons'      # long list, modified date sort
+alias llm='eza --all --header --long --sort=modified $eza_params'
+alias la="eza -lbhHigUmuSa --git --color-scale --icons"  # all list
+alias lx='eza -lbhHigUmuSa@ --git --color-scale --icons' # all + extended list
+
+alias lS='eza -1'               # one column, just names
+alias lt='eza --tree --level=2' # tree
+alias tldr="tldr --config-path $XDG_CONFIG_HOME/tldr/config.toml"
+{{- end }}
+
+# ============================================================================
+# Plugins (ZimFW)
+# ============================================================================
+
+# Check if Zim exists; if not, install/init via Homebrew's script
+local zim_brew_script="/opt/homebrew/opt/zimfw/share/zimfw.zsh"
+
+if [[ -f "$zim_brew_script" ]] && [[ ! ${ZIM_HOME}/init.zsh -nt ${ZIM_CONFIG_FILE} ]]; then
+  source "$zim_brew_script" init -q
+fi
+
+zstyle ':zim:ssh' ids 'id_ed25519'
+
+[[ -f "${ZIM_HOME}/init.zsh" ]] && source "${ZIM_HOME}/init.zsh"
+
+# ============================================================================
+# Tools & aliases
+# ============================================================================
+
+# Mise
+if (( $+commands[mise] )); then
+  eval "$(mise activate zsh)"
+fi

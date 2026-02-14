@@ -1,0 +1,10 @@
+zmodule jeffreytse/zsh-vi-mode
+zmodule zdharma-continuum/fast-syntax-highlighting
+zmodule zsh-users/zsh-completions
+zmodule zsh-users/zsh-autosuggestions
+zmodule ssh
+zmodule olets/zsh-abbr
+zmodule duration-info
+zmodule git-info
+zmodule asciiship
+zmodule completion

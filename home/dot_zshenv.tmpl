@@ -2,18 +2,20 @@
 # 0. XDG base directory specification
 # ------------------------------------------------------------------------------
 
-export XDG_CONFIG_HOME="$HOME/.config"
-export XDG_CACHE_HOME="$HOME/.cache"
-export XDG_DATA_HOME="$HOME/.local/share"
-export XDG_STATE_HOME="$HOME/.local/state"
-export XDG_BIN_HOME="$HOME/.local/bin"
-export DOTFILES_DIR="$XDG_DATA_HOME/chezmoi"
+export XDG_CONFIG_HOME="{{ .xdg.configHome }}"
+export XDG_CACHE_HOME="{{ .xdg.cacheHome }}"
+export XDG_DATA_HOME="{{ .xdg.dataHome }}"
+export XDG_STATE_HOME="{{ .xdg.stateHome }}"
+export XDG_BIN_HOME="{{ .xdg.binHome }}"
+
+# Application-specific XDG enforcement
+export DOTFILES_DIR="{{ .xdg.dataHome }}/chezmoi"
 
 # ------------------------------------------------------------------------------
 # 1. ZDOTDIR
 # ------------------------------------------------------------------------------
 
-export ZDOTDIR="$XDG_CONFIG_HOME/zsh"
+export ZDOTDIR="{{ .xdg.configHome }}/zsh"
 
 # ------------------------------------------------------------------------------
 # 2. Path configuration
@@ -24,7 +26,7 @@ typeset -U path PATH
 
 # Prepend user binaries to the path
 path=(
-  "$XDG_BIN_HOME"
+  "{{ .xdg.binHome }}"
   "$DOTFILES_DIR/bin"
   "$path[@]"
 )
@@ -35,7 +37,6 @@ export PATH
 # 3. Homebrew
 # ------------------------------------------------------------------------------
 eval "$(/opt/homebrew/bin/brew shellenv)"
-export HOMEBREW_BUNDLE_FILE="$XDG_CONFIG_HOME/brew/Brewfile"
 
 # ------------------------------------------------------------------------------
 # 4. Default programs
@@ -50,14 +51,18 @@ export PAGER="less"
 # ------------------------------------------------------------------------------
 
 # Keep the home directory clean by forcing apps to use XDG dirs
-export GNUPGHOME="$XDG_CONFIG_HOME/gnupg"
-export LESSHISTFILE="$XDG_STATE_HOME/less/history"
-export WGETRC="$XDG_CONFIG_HOME/wget/wgetrc"
+export GNUPGHOME="{{ .xdg.configHome }}/gnupg"
+export LESSHISTFILE="{{ .xdg.stateHome }}/less/history"
+export WGETRC="{{ .xdg.configHome }}/wget/wgetrc"
+export TEALDEER_CONFIG_DIR="{{ .xdg.configHome }}/tealdeer"
 
 # ------------------------------------------------------------------------------
-# 6. Cache
+# 6. Plugins and cache management
 # ------------------------------------------------------------------------------
+# It is best to set these here so they are ready before .zshrc loads
+export ZIM_HOME="$ZDOTDIR/.zim"
+export ZIM_CONFIG_FILE="$ZDOTDIR/.zimrc"
 
 # Zsh caching
-export ZSH_CACHE_DIR="$XDG_CACHE_HOME/zsh"
+export ZSH_CACHE_DIR="{{ .xdg.cacheHome }}/zsh"
 export ZSH_COMPDUMP="$ZSH_CACHE_DIR/zcompdump"
