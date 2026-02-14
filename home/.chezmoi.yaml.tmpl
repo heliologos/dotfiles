@@ -44,6 +44,8 @@ data:
     terminal: {{ $terminal | quote }}
     editor: {{ $editor | quote }}
     password_manager: {{ $passwordManager | quote }}
+  homebrew:
+    prefix: "/opt/homebrew"
   programs:
     password_managers: {{ $enabledPasswordManagers | toJson }}
     terminals: {{ $enabledTerminals | toJson }}
@@ -55,3 +57,4 @@ data:
     dataHome: {{ $xdgDataHome | quote }}
     stateHome: {{ $xdgStateHome | quote }}
     binHome: {{ $xdgBinHome | quote }}
+    

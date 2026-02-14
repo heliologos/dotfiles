@@ -1,0 +1,30 @@
+packages:
+  darwin:
+    brew:
+      taps: []
+      formulae:
+        - chezmoi
+        - git
+        - lazygit
+        - tealdeer
+        - zimfw
+      casks: []
+
+  profiles:
+    home:
+      darwin:
+        brew:
+          taps: []
+          formulae:
+            - neovim
+            - mise
+          casks:
+            - brave-browser
+            - kitty
+            - 1password
+    work:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []

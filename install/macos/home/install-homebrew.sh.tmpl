@@ -1,0 +1,30 @@
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+if [[ "{{ .chezmoi.os }}" != "darwin" ]]; then
+  exit 0
+fi
+
+if command -v brew >/dev/null 2>&1; then
+  exit 0
+fi
+
+if [[ "{{ .profile }}" == "work" ]]; then
+  WORK_INSTALLER="${HOME}/.config/chezmoi/work/homebrew-install.sh"
+  if [[ -x "${WORK_INSTALLER}" ]]; then
+    echo "Using work-specific Homebrew installer..."
+    "${WORK_INSTALLER}"
+    exit 0
+  fi
+
+  cat >&2 <<'EOF'
+Work profile is active but no work Homebrew installer was found.
+Expected executable: ~/.config/chezmoi/work/homebrew-install.sh
+Manage that file as an encrypted chezmoi source file.
+EOF
+  exit 1
+fi
+
+echo "Homebrew not found; installing..."
+NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"

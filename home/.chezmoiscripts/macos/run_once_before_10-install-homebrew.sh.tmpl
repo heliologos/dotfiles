@@ -1,0 +1,3 @@
+{{ if eq .chezmoi.os "darwin" -}}
+{{   includeTemplate "../install/macos/home/install-homebrew.sh.tmpl" . }}
+{{- end }}

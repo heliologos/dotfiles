@@ -1,0 +1,72 @@
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+if [[ "{{ .chezmoi.os }}" != "darwin" ]]; then
+  exit 0
+fi
+
+{{ $packages := index . "packages" | default dict -}}
+{{ $darwin := index $packages "darwin" | default dict -}}
+{{ $brew := index $darwin "brew" | default dict -}}
+{{ $profiles := index $packages "profiles" | default dict -}}
+{{ $profile := index . "profile" | default "home" -}}
+{{ $profilePackages := index $profiles $profile | default dict -}}
+{{ $profileDarwin := index $profilePackages "darwin" | default dict -}}
+{{ $profileBrew := index $profileDarwin "brew" | default dict -}}
+
+BREW_BIN=""
+if command -v brew >/dev/null 2>&1; then
+  BREW_BIN="$(command -v brew)"
+elif [[ -x "/opt/homebrew/bin/brew" ]]; then
+  BREW_BIN="/opt/homebrew/bin/brew"
+elif [[ -x "/usr/local/bin/brew" ]]; then
+  BREW_BIN="/usr/local/bin/brew"
+fi
+
+if [[ -z "${BREW_BIN}" ]]; then
+  echo "Homebrew is unavailable; skipping package sync." >&2
+  exit 0
+fi
+
+BREWFILE_TMP="$(mktemp "${TMPDIR:-/tmp}/chezmoi-brewfile.XXXXXX")"
+trap 'rm -f "${BREWFILE_TMP}"' EXIT
+
+cat >"${BREWFILE_TMP}" <<'EOF_BREWFILE'
+{{ range (index $brew "taps") -}}
+tap {{ . | quote }}
+{{ end -}}
+{{ range (index $profileBrew "taps") -}}
+tap {{ . | quote }}
+{{ end -}}
+{{ range (index $brew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range (index $profileBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range (index $brew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ range (index $profileBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+EOF_BREWFILE
+
+if [[ -z "$(tr -d '[:space:]' < "${BREWFILE_TMP}")" ]]; then
+  echo "No Homebrew packages defined; skipping package sync."
+  exit 0
+fi
+
+if "${BREW_BIN}" bundle check --file="${BREWFILE_TMP}" >/dev/null 2>&1; then
+  echo "Homebrew bundle already satisfied."
+  exit 0
+fi
+
+echo "Applying Homebrew bundle..."
+"${BREW_BIN}" bundle install --file="${BREWFILE_TMP}" --no-upgrade
+
+if [[ "${CHEZMOI_BREW_CLEANUP:-0}" == "1" ]]; then
+  echo "Cleaning up unmanaged Homebrew packages..."
+  "${BREW_BIN}" bundle cleanup --file="${BREWFILE_TMP}" --force
+fi
