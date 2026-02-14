@@ -1,0 +1,13 @@
+#!/usr/bin/env zsh
+
+set -euo pipefail
+
+if [[ "{{ .chezmoi.os }}" != "darwin" ]]; then
+  exit 0
+fi
+
+if [[ "{{ .profile }}" != "work" ]]; then
+  exit 0
+fi
+
+{{ include "../install/macos/work/install-homebrew-packages.sh.age" | decrypt }}

@@ -4,8 +4,10 @@ packages:
       taps: []
       formulae:
         - chezmoi
+        - eza
         - git
         - lazygit
+        - mise
         - tealdeer
         - zimfw
       casks: []
