@@ -11,13 +11,10 @@
 [commit]
   gpgsign = true
 
-{{ if eq .profile "work" -}}
+# Default to personal/1Password signing
 [include]
-  file = ~/.config/git/config-work
-
-[includeIf "gitdir:~/git/personal/"]
   path = ~/.config/git/config-personal
-{{- else -}}
-[include]
-  file = ~/.config/git/config-personal
+
+{{ if eq .profile "work" -}}
+{{ include "private_dot_config/git/config-work.age" | decrypt -}}
 {{- end }}
