@@ -74,6 +74,79 @@ resolve_age_identity() {
   die "HOME is not set"
 }
 
+decrypt_age_identity() {
+  chezmoi_cmd="$1"
+  source_age_identity="$2"
+  age_identity="$3"
+  passphrase="${CHEZMOI_AGE_KEY_PASSPHRASE:-}"
+
+  if [ -z "${passphrase}" ]; then
+    if [ ! -r /dev/tty ]; then
+      die "cannot prompt for age passphrase (no TTY available); set CHEZMOI_AGE_KEY_PASSPHRASE"
+    fi
+
+    printf 'Enter passphrase for %s: ' "${source_age_identity}" >/dev/tty
+    stty_state="$(stty -g </dev/tty 2>/dev/null || true)"
+    stty -echo </dev/tty 2>/dev/null || true
+    IFS= read -r passphrase </dev/tty || true
+    if [ -n "${stty_state}" ]; then
+      stty "${stty_state}" </dev/tty 2>/dev/null || true
+    else
+      stty echo </dev/tty 2>/dev/null || true
+    fi
+    printf '\n' >/dev/tty
+  fi
+
+  [ -n "${passphrase}" ] || die "empty age passphrase"
+
+  if command -v expect >/dev/null 2>&1; then
+    CHEZMOI_EXPECT_CMD="${chezmoi_cmd}" \
+    CHEZMOI_EXPECT_OUT="${age_identity}" \
+    CHEZMOI_EXPECT_SRC="${source_age_identity}" \
+    CHEZMOI_EXPECT_PASS="${passphrase}" \
+    expect -c '
+      set timeout 120
+      log_user 0
+      set attempts 0
+      set cmd $env(CHEZMOI_EXPECT_CMD)
+      set out $env(CHEZMOI_EXPECT_OUT)
+      set src $env(CHEZMOI_EXPECT_SRC)
+      set pass $env(CHEZMOI_EXPECT_PASS)
+      spawn -noecho $cmd age decrypt --passphrase --output $out $src
+      expect {
+        timeout { exit 124 }
+        -nocase -re "enter passphrase: ?" {
+          incr attempts
+          if {$attempts > 3} { exit 125 }
+          send -- "$pass\r"
+          exp_continue
+        }
+        eof
+      }
+      catch wait result
+      exit [lindex $result 3]
+    '
+    status=$?
+  else
+    # Fallback to native prompt behavior if expect is unavailable.
+    if [ -t 0 ]; then
+      "${chezmoi_cmd}" age decrypt --passphrase --output "${age_identity}" "${source_age_identity}"
+    elif [ -r /dev/tty ]; then
+      "${chezmoi_cmd}" age decrypt --passphrase --output "${age_identity}" "${source_age_identity}" </dev/tty
+    else
+      die "cannot prompt for age passphrase (no TTY available)"
+    fi
+    status=$?
+  fi
+
+  unset passphrase
+  case "${status}" in
+    124) die "timed out waiting for age passphrase input" ;;
+    125) die "age passphrase was rejected multiple times" ;;
+  esac
+  return "${status}"
+}
+
 ensure_chezmoi() {
   if command -v chezmoi >/dev/null 2>&1; then
     command -v chezmoi
@@ -96,7 +169,20 @@ ensure_age_identity() {
   source_dir="$2"
   age_identity="$(resolve_age_identity)"
   age_identity_dir="$(dirname "${age_identity}")"
-  source_age_identity="${source_dir}/home/key.txt.age"
+  source_age_identity=""
+
+  # Support both source layouts:
+  # 1) source dir is repo root   -> ${source_dir}/home/key.txt.age
+  # 2) source dir is "home" root -> ${source_dir}/key.txt.age
+  for candidate in \
+    "${source_dir}/key.txt.age" \
+    "${source_dir}/home/key.txt.age"
+  do
+    if [ -f "${candidate}" ]; then
+      source_age_identity="${candidate}"
+      break
+    fi
+  done
 
   mkdir -p "${age_identity_dir}"
   chmod 700 "${age_identity_dir}" 2>/dev/null || true
@@ -111,9 +197,9 @@ ensure_age_identity() {
     die "age identity path exists but is not a regular file: ${age_identity}"
   fi
 
-  if [ -f "${source_age_identity}" ]; then
+  if [ -n "${source_age_identity}" ]; then
     log "age identity was not found. Decrypting ${source_age_identity}..."
-    "${chezmoi_cmd}" age decrypt --use-builtin-age true --passphrase --output "${age_identity}" "${source_age_identity}"
+    decrypt_age_identity "${chezmoi_cmd}" "${source_age_identity}" "${age_identity}"
     chmod 600 "${age_identity}" 2>/dev/null || true
     printf '%s\n' "${age_identity}"
     return 0
@@ -149,7 +235,7 @@ main() {
   export CHEZMOI_AGE_IDENTITY="${age_identity}"
   export CHEZMOI_AGE_RECIPIENT="${age_recipient}"
 
-  "${chezmoi_cmd}" apply --use-builtin-age true
+  "${chezmoi_cmd}" apply
 }
 
 main "$@"
