@@ -1,0 +1,10 @@
+{{ if eq .profile "home" -}}
+[user]
+  signingkey = {{ .signing_key }}
+{{- end }}
+
+[gpg]
+  format = ssh
+
+[gpg "ssh"]
+  program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
