@@ -66,6 +66,12 @@ alias tldr="tldr --config-path $XDG_CONFIG_HOME/tldr/config.toml"
 # Plugins (ZimFW)
 # ============================================================================
 
+# Fix zsh-vi-mode overriding zsh-abbr space key binding
+# This hook runs after zsh-vi-mode initializes to restore abbr expansion
+function zvm_after_init() {
+  bindkey " " abbr-expand-and-insert
+}
+
 # Check if Zim exists; if not, install/init via Homebrew's script
 local zim_brew_script="/opt/homebrew/opt/zimfw/share/zimfw.zsh"
 
@@ -74,6 +80,7 @@ if [[ -f "$zim_brew_script" ]] && [[ ! ${ZIM_HOME}/init.zsh -nt ${ZIM_CONFIG_FIL
 fi
 
 zstyle ':zim:ssh' ids 'id_ed25519'
+zstyle ':completion::complete:*' cache-path "${XDG_CACHE_HOME}/zsh/zcompcache"
 
 [[ -f "${ZIM_HOME}/init.zsh" ]] && source "${ZIM_HOME}/init.zsh"
 
