@@ -14,16 +14,134 @@ packages:
         - zimfw
         - zoxide
       casks: []
+    capacities:
+      server:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - roon
+      client:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+    password_managers:
+      1password:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - 1password-cli
+            - 1password
+      bitwarden:
+        brew:
+          taps: []
+          formulae:
+            - bitwarden-cli
+          casks:
+            - bitwarden
+      proton-pass:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - proton-pass
+    terminals:
+      ghostty:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - ghostty
+      kitty:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - kitty
+      alacritty:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - alacritty
+      wezterm:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - wezterm
+      iterm2:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - iterm2
+    editors:
+      nvim:
+        brew:
+          taps: []
+          formulae:
+            - neovim
+          casks: []
+      emacs:
+        brew:
+          taps:
+            - jimeh/emacs-builds
+          formulae: []
+          casks:
+            - emacs-app-good
+      vscode:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - visual-studio-code
+      zed:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - zed
+    shells:
+      zsh:
+        brew:
+          taps: []
+          formulae:
+            - zsh
+          casks: []
+      fish:
+        brew:
+          taps: []
+          formulae:
+            - fish
+          casks: []
+      nushell:
+        brew:
+          taps: []
+          formulae:
+            - nushell
+          casks: []
+    toolchains:
+      mise:
+        brew:
+          taps: []
+          formulae:
+            - mise
+          casks: []
+    browsers:
+      brave:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - brave-browser
 
   profiles:
     home:
       darwin:
         brew:
           taps: []
-          formulae:
-            - neovim
-            - mise
-          casks:
-            - brave-browser
-            - ghostty
-            - 1password
+          formulae: []
+          casks: []

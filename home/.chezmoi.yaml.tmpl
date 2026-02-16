@@ -1,4 +1,5 @@
 {{- $profile := promptChoiceOnce . "profile" "What environment are you in" (list "home" "work") "work" -}}
+{{- $capacities := ("client") -}}
 {{- $name := "" -}}
 {{- $email := "" -}}
 {{- if eq $profile "work" -}}
@@ -24,6 +25,7 @@
 {{- $passwordManager := promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
 
 {{- /* optional programs: multiple selections */ -}}
+{{- $enabledCapacities := promptMultichoiceOnce . "capacities" "Enable capacities" (list "client" "server") (list $capacities) -}}
 {{- $enabledShells := promptMultichoiceOnce . "programs.shells" "Enable shells" $availableShells (list $shell) -}}
 {{- $enabledPasswordManagers := promptMultichoiceOnce . "programs.password_managers" "Enable password managers" $availablePasswordManagers (list $passwordManager) -}}
 {{- $enabledTerminals := promptMultichoiceOnce . "programs.terminals" "Enable terminals" $availableTerminals (list $terminal) -}}
@@ -46,6 +48,7 @@ data:
   email: {{ $email | quote }}
   signing_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH3h9tju97PYWlIax2f6vDPgj8kT3hmcvZGHf5CR0kXI"
   profile: {{ $profile | quote }}
+  capacities: {{ $enabledCapacities | toJson }}
   defaults:
     shell: {{ $shell | quote }}
     browser: {{ $browser | quote }}
