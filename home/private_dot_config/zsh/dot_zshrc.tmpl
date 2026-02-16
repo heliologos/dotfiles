@@ -37,6 +37,7 @@ setopt HIST_VERIFY HIST_REDUCE_BLANKS
 setopt AUTO_CD AUTO_PUSHD PUSHD_SILENT PUSHD_IGNORE_DUPS
 setopt EXTENDED_GLOB GLOB_DOTS
 setopt NO_BEEP INTERACTIVE_COMMENTS
+setopt COMPLETE_ALIASES # eza as alias for ls wasn't working
 unsetopt NOMATCH
 
 # ============================================================================
@@ -75,6 +76,11 @@ fi
 zstyle ':zim:ssh' ids 'id_ed25519'
 
 [[ -f "${ZIM_HOME}/init.zsh" ]] && source "${ZIM_HOME}/init.zsh"
+
+# Fix completions for aliased commands (must come after compinit)
+{{ if lookPath "eza" -}}
+compdef _eza ls l ll ltr llm la lx lS lt
+{{- end }}
 
 # ============================================================================
 # Tools & aliases

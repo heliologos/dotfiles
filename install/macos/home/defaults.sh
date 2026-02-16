@@ -215,6 +215,11 @@ configure_touch_id_for_sudo() {
   fi
 }
 
+configure_iterm() {
+  defaults write com.googlecode.iterm2 "PrefsCustomFolder" -string "$HOME/.config/iterm2"
+  defaults write com.googlecode.iterm2 "LoadPrefsFromCustomFolder" -bool true
+}
+
 kill_affected_applications() {
   local apps=(
     "Activity Monitor"
@@ -247,6 +252,7 @@ main() {
   defaults_launchpad
   defaults_mail
   configure_touch_id_for_sudo
+  configure_iterm
   kill_affected_applications
 }
 

@@ -9,3 +9,6 @@
 .config/git/config-work
 {{- end }}
 key.txt.age
+{{- if not (has "iterm2" .programs.terminals) }}
+.config/iterm2
+{{ end }}

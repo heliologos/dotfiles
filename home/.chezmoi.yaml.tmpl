@@ -19,7 +19,7 @@
 {{- /* default programs: single choice per category */ -}}
 {{- $shell := "zsh" -}}
 {{- $browser := promptChoiceOnce . "defaults.browser" "Default browser" $availableBrowsers "brave" -}}
-{{- $terminal := promptChoiceOnce . "defaults.terminal" "Primary terminal" $availableTerminals "kitty" -}}
+{{- $terminal := promptChoiceOnce . "defaults.terminal" "Primary terminal" $availableTerminals "iterm2" -}}
 {{- $editor := promptChoiceOnce . "defaults.editor" "Primary editor" $availableEditors "nvim" -}}
 {{- $passwordManager := promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
 
