@@ -1,0 +1,744 @@
+#+title: Emacs Configuration
+#+author: Sol
+#+property: header-args:emacs-lisp :tangle config.el :lexical t
+#+startup: show2levels
+
+This is a literate Emacs configuration.  Every elisp block in this file
+tangles to =config.el=, which is loaded by =init.el= at startup.
+
+The structure follows a rough dependency order: core settings first,
+then UI, then editing, then major modes.  Each section documents /why/
+a setting exists, not just what it does — the code already tells you
+the "what."
+
+Note on =:ensure (:wait t)=: Elpaca installs packages asynchronously by
+default.  When a =use-package= form includes =:demand t= or =:after=,
+it tries to =require= the package immediately — which fails if elpaca
+hasn't finished building it yet.  =:ensure (:wait t)= tells elpaca to
+install synchronously, blocking until the package is ready.  This makes
+the first launch slower but eliminates load-order race conditions.
+
+* Core Defaults
+
+Settings that affect Emacs' baseline behavior before any packages load.
+
+#+begin_src emacs-lisp
+;;; -*- lexical-binding: t; -*-
+
+;; Write customizations to a separate file so they don't pollute init.el.
+(setq custom-file (expand-file-name "custom.el" user-emacs-directory))
+(when (file-exists-p custom-file)
+  (load custom-file 'noerror))
+
+;; Prefer UTF-8 everywhere.
+(set-language-environment "UTF-8")
+(prefer-coding-system 'utf-8)
+
+;; Don't litter the filesystem with backup~ and #autosave# files.
+;; Centralize them instead.
+(setq backup-directory-alist
+      `(("." . ,(expand-file-name "backups/" user-emacs-directory)))
+      auto-save-file-name-transforms
+      `((".*" ,(expand-file-name "auto-saves/" user-emacs-directory) t))
+      lock-file-directory (expand-file-name "locks/" user-emacs-directory))
+
+(make-directory (expand-file-name "backups/" user-emacs-directory) t)
+(make-directory (expand-file-name "auto-saves/" user-emacs-directory) t)
+(make-directory (expand-file-name "locks/" user-emacs-directory) t)
+
+;; y/n instead of yes/no.
+(setq use-short-answers t)
+
+;; Don't ask about following symlinks to version-controlled files.
+(setq vc-follow-symlinks t)
+
+;; Line numbers everywhere.
+(setq display-line-numbers-type t)
+(global-display-line-numbers-mode 1)
+
+;; Split behavior (from your Doom config).
+(setq evil-split-window-below t
+      evil-vsplit-window-right t)
+
+;; Revert buffers when the underlying file changes.
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
+
+;; Remember cursor position in files.
+(save-place-mode 1)
+
+;; Remember recent files.
+(recentf-mode 1)
+(setq recentf-max-saved-items 200)
+
+;; Save minibuffer history across sessions.
+(savehist-mode 1)
+#+end_src
+
+* Package Manager Helpers
+
+Convenience macro for built-in packages that shouldn't go through elpaca.
+
+#+begin_src emacs-lisp
+;; For built-in packages, we need :ensure nil so elpaca doesn't try
+;; to download them.  This is the main papercut versus Doom's `after!'.
+(defmacro use-builtin (name &rest args)
+  "Like `use-package' but with :ensure nil for built-in packages."
+  (declare (indent 1))
+  `(use-package ,name :ensure nil ,@args))
+#+end_src
+
+* Evil Mode
+
+Evil is the biggest single piece of your Doom setup.  =evil-collection=
+handles the integration glue for dozens of modes that Doom's =+everywhere=
+flag provides.
+
+#+begin_src emacs-lisp
+(use-package evil
+  :ensure (:wait t)
+  :demand t
+  :init
+  ;; These must be set BEFORE evil loads.
+  (setq evil-want-integration t      ; needed for evil-collection
+        evil-want-keybinding nil     ; evil-collection provides these instead
+        evil-want-C-u-scroll t       ; C-u scrolls up like vim
+        evil-want-C-d-scroll t
+        evil-want-Y-yank-to-eol t    ; Y yanks to EOL, not whole line
+        evil-undo-system 'undo-redo) ; use Emacs 28+ built-in undo-redo
+  :config
+  (evil-mode 1))
+
+(use-package evil-collection
+  :ensure (:wait t)
+  :after evil
+  :demand t
+  :config
+  (evil-collection-init))
+
+;; gc/gcc for commenting — lightweight alternative to Doom's built-in.
+(use-package evil-nerd-commenter
+  :ensure (:wait t)
+  :after evil
+  :config
+  (evilnc-default-hotkeys nil t)) ; sets up gc as operator, gcc for lines
+
+;; Surround (cs, ds, ys) — equivalent to vim-surround.
+(use-package evil-surround
+  :ensure (:wait t)
+  :after evil
+  :config
+  (global-evil-surround-mode 1))
+#+end_src
+
+* Keybinding Infrastructure
+
+Doom uses its own =map!= macro over =general.el=.  We use general directly,
+which is what Doom wraps anyway.  This gives you a leader key (SPC) in
+normal/visual state, similar to Doom's default.
+
+#+begin_src emacs-lisp
+(use-package general
+  :ensure (:wait t)
+  :demand t
+  :config
+  ;; Local file exploration helpers.
+  (defun my/current-directory ()
+    "Return the most useful directory for file exploration."
+    (if-let ((file (buffer-file-name)))
+        (file-name-directory file)
+      default-directory))
+
+  (defun my/find-file-here ()
+    "Open `find-file' from the current buffer's directory."
+    (interactive)
+    (let ((default-directory (my/current-directory)))
+      (call-interactively #'find-file)))
+
+  (defun my/dired-here ()
+    "Open `dired' in the current buffer's directory."
+    (interactive)
+    (dired (my/current-directory)))
+
+  (defun my/find-file-in-config ()
+    "Open `find-file' rooted at `user-emacs-directory'."
+    (interactive)
+    (let ((default-directory user-emacs-directory))
+      (call-interactively #'find-file)))
+
+  (general-create-definer my/leader
+    :states '(normal visual emacs)
+    :keymaps 'override
+    :prefix "SPC"
+    :global-prefix "C-SPC")
+
+  (general-create-definer my/local-leader
+    :states '(normal visual emacs)
+    :keymaps 'override
+    :prefix "SPC m"
+    :global-prefix "C-SPC m")
+
+  ;; Top-level leader bindings.  Add to these as you build out your config.
+  (my/leader
+    ;; --- Buffers ---
+    "b" '(:ignore t :wk "buffer")
+    "bb" '(switch-to-buffer :wk "switch buffer")
+    "bk" '(kill-current-buffer :wk "kill buffer")
+    "bn" '(next-buffer :wk "next buffer")
+    "bp" '(previous-buffer :wk "prev buffer")
+
+    ;; --- Files ---
+    "f" '(:ignore t :wk "file")
+    "ff" '(find-file :wk "find file")
+    "fr" '(recentf-open :wk "recent files")
+    "fs" '(save-buffer :wk "save")
+    "f." '(my/find-file-here :wk "find file here")
+    "fd" '(my/dired-here :wk "dired here")
+    "fe" '(my/find-file-in-config :wk "find in config")
+
+    ;; --- Local Explorer ---
+    "." '(my/find-file-here :wk "find file here")
+    "," '(my/dired-here :wk "dired here")
+
+    ;; --- Window ---
+    "w" '(:ignore t :wk "window")
+    "wv" '(evil-window-vsplit :wk "vsplit")
+    "ws" '(evil-window-split :wk "split")
+    "wd" '(delete-window :wk "close")
+    "ww" '(other-window :wk "other window")
+
+    ;; --- Quit ---
+    "q" '(:ignore t :wk "quit")
+    "qq" '(save-buffers-kill-terminal :wk "quit emacs")
+
+    ;; --- Help ---
+    "h" '(:ignore t :wk "help")
+    "hf" '(describe-function :wk "describe function")
+    "hv" '(describe-variable :wk "describe variable")
+    "hk" '(describe-key :wk "describe key")
+    "hi" '(info :wk "info")
+
+    ;; --- Search ---
+    "s" '(:ignore t :wk "search")
+    ;; These get filled in by consult below.
+
+    ;; --- Toggle ---
+    "t" '(:ignore t :wk "toggle")
+    "tt" '(load-theme :wk "choose theme")
+    "tl" '(display-line-numbers-mode :wk "line numbers")))
+#+end_src
+
+* Completion: Vertico + Orderless + Corfu
+
+This is Doom's =:completion= stack.  The four packages work together:
+- *vertico*: vertical minibuffer completion UI
+- *orderless*: flexible matching (space-separated patterns)
+- *marginalia*: annotations in the minibuffer (file sizes, docstrings)
+- *consult*: enhanced search commands that feed into vertico
+- *corfu*: in-buffer completion popup (replaces company-mode)
+- *cape*: extra completion-at-point backends for corfu
+
+#+begin_src emacs-lisp
+;; --- Minibuffer Completion ---
+
+(use-package vertico
+  :ensure (:wait t)
+  :demand t
+  :config
+  (vertico-mode 1)
+  (setq vertico-count 15
+        vertico-cycle t))
+
+(use-package orderless
+  :ensure (:wait t)
+  :demand t
+  :config
+  (setq completion-styles '(orderless basic)
+        completion-category-overrides '((file (styles basic partial-completion)))))
+
+(use-package marginalia
+  :ensure (:wait t)
+  :demand t
+  :config
+  (marginalia-mode 1))
+
+(use-package consult
+  :ensure (:wait t)
+  :after general
+  :demand t
+  :config
+  (my/leader
+    "bb" '(consult-buffer :wk "switch buffer")
+    "fr" '(consult-recent-file :wk "recent files")
+    "ss" '(consult-line :wk "search buffer")
+    "sS" '(consult-line-multi :wk "search all buffers")
+    "sp" '(consult-ripgrep :wk "search project")
+    "si" '(consult-imenu :wk "imenu")))
+
+;; --- In-Buffer Completion ---
+
+(use-package corfu
+  :ensure (:wait t)
+  :demand t
+  :custom
+  (corfu-auto t)            ; show completions automatically
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 2)     ; complete after 2 characters
+  (corfu-cycle t)
+  (corfu-preselect 'prompt)
+  :config
+  (global-corfu-mode 1)
+  (corfu-popupinfo-mode 1)) ; show docs in a popup beside candidates
+
+(use-package cape
+  :ensure (:wait t)
+  :demand t
+  :init
+  ;; Add useful completion-at-point backends.
+  (add-hook 'completion-at-point-functions #'cape-dabbrev)
+  (add-hook 'completion-at-point-functions #'cape-file))
+#+end_src
+
+* Which-Key
+
+Shows available keybindings in a popup after you press a prefix.
+Doom includes this by default; it's nearly essential with a leader key setup.
+
+#+begin_src emacs-lisp
+(use-package which-key
+  :ensure (:wait t)
+  :demand t
+  :config
+  (which-key-mode 1)
+  (setq which-key-idle-delay 0.1))
+#+end_src
+
+* UI: Theme, Font, Modeline
+
+#+begin_src emacs-lisp
+;; --- Theme ---
+;; doom-themes is a standalone package — it works fine outside Doom.
+(use-package doom-themes
+  :ensure (:wait t)
+  :demand t
+  :config
+  (load-theme 'doom-tokyo-night t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-org-config))
+
+;; --- Font ---
+;; Set after theme so face remapping doesn't fight the theme.
+(set-face-attribute 'default nil
+                    :family "JetBrainsMono Nerd Font"
+                    :height 120) ; height is in 1/10pt, so 120 = 12pt
+
+;; --- Modeline ---
+;; doom-modeline also works standalone.
+(use-package doom-modeline
+  :ensure (:wait t)
+  :demand t
+  :config
+  (doom-modeline-mode 1)
+  (setq doom-modeline-height 30
+        doom-modeline-bar-width 4
+        doom-modeline-buffer-file-name-style 'truncate-upto-project))
+
+;; Dashboard
+(use-package dashboard
+  :ensure (:wait t)
+  :config
+  (add-hook 'elpaca-after-init-hook #'dashboard-insert-startupify-lists)
+  (add-hook 'elpaca-after-init-hook #'dashboard-initialize)
+  (dashboard-setup-startup-hook))
+
+;; --- Smooth Scrolling ---
+;; Pixel-level smooth scrolling (Emacs 29+).
+(when (fboundp 'pixel-scroll-precision-mode)
+  (pixel-scroll-precision-mode 1))
+
+;; --- hl-todo ---
+;; Highlight TODO/FIXME/HACK/NOTE in comments.
+(use-package hl-todo
+  :ensure (:wait t)
+  :hook (prog-mode . hl-todo-mode))
+
+;; --- Visual Fill Column ---
+;; Optional: nice for org-mode writing.  Wrap at fill-column without centering.
+(use-package visual-fill-column
+  :ensure (:wait t)
+  :hook (org-mode . visual-fill-column-mode)
+  :custom
+  (visual-fill-column-width 100)
+  (visual-fill-column-center-text nil))
+#+end_src
+
+* Editing Enhancements
+
+Snippets, formatting, whitespace, and structural editing.
+
+#+begin_src emacs-lisp
+;; --- Snippets ---
+;; yasnippet is what Doom's `snippets' module wraps.
+(use-package yasnippet
+  :ensure (:wait t)
+  :hook (prog-mode . yas-minor-mode)
+  :config
+  (yas-reload-all))
+
+(use-package yasnippet-snippets
+  :ensure (:wait t)
+  :after yasnippet)
+
+;; --- Electric Pair ---
+;; Auto-close parens, brackets, quotes.  Doom uses smartparens, but
+;; electric-pair-mode is built-in and sufficient for most workflows.
+;; Switch to smartparens later if you want more structural editing.
+(use-builtin electric
+  :hook (prog-mode . electric-pair-mode))
+
+;; --- Whitespace Cleanup ---
+;; Trim trailing whitespace on save (mirrors Doom's whitespace +trim).
+(add-hook 'before-save-hook #'delete-trailing-whitespace)
+
+;; --- Format on Save ---
+;; apheleia handles async formatting on save, similar to Doom's
+;; (format +onsave) but without blocking the editor.
+(use-package apheleia
+  :ensure (:wait t)
+  :demand t
+  :config
+  (apheleia-global-mode 1))
+#+end_src
+
+* Version Control
+
+#+begin_src emacs-lisp
+;; --- Magit ---
+(use-package magit
+  :ensure (:wait t)
+  :commands magit-status
+  :general
+  (my/leader
+    "g"  '(:ignore t :wk "git")
+    "gs" '(magit-status :wk "status")
+    "gb" '(magit-blame :wk "blame")
+    "gl" '(magit-log-current :wk "log")))
+
+;; --- Diff indicators in the gutter ---
+;; diff-hl is the standalone equivalent of Doom's vc-gutter.
+(use-package diff-hl
+  :ensure (:wait t)
+  :demand t
+  :hook ((magit-pre-refresh  . diff-hl-magit-pre-refresh)
+         (magit-post-refresh . diff-hl-magit-post-refresh))
+  :config
+  (global-diff-hl-mode 1)
+  (diff-hl-flydiff-mode 1)) ; update diffs without saving
+#+end_src
+
+* Project Management
+
+Doom uses projectile under the hood; built-in =project.el= (Emacs 28+)
+is a lighter alternative that works well with consult.
+
+#+begin_src emacs-lisp
+(use-builtin project
+  :general
+  (my/leader
+    "p"  '(:ignore t :wk "project")
+    "pp" '(project-switch-project :wk "switch project")
+    "pf" '(project-find-file :wk "find file")
+    "ps" '(consult-ripgrep :wk "search project") ; uses consult
+    "pk" '(project-kill-buffers :wk "kill buffers")))
+#+end_src
+
+* Org Mode
+
+Org is built-in, so we use =:ensure nil=.  This section ports your
+Doom org settings.
+
+#+begin_src emacs-lisp
+(use-builtin org
+  :hook ((org-mode . visual-line-mode)
+         (org-mode . (lambda () (display-line-numbers-mode 0))))
+  :general
+  (my/leader
+    "o"  '(:ignore t :wk "org")
+    "oa" '(org-agenda :wk "agenda")
+    "oc" '(org-capture :wk "capture"))
+  :config
+  (add-to-list 'org-modules 'org-habit)
+
+  (setq org-directory "~/org/"
+        org-startup-folded 'show2levels
+        org-ellipsis "…"
+        org-hide-emphasis-markers t
+        org-pretty-entities t
+        org-fontify-quote-and-verse-blocks t
+        org-src-fontify-natively t
+        org-src-tab-acts-natively t
+        org-log-done-with-time nil
+        org-agenda-files (list org-directory)
+        org-archive-location (file-name-concat org-directory ".archive/%s::")
+        org-id-method 'ts
+        org-id-ts-format "%Y%m%dT%H%M%S"
+
+        org-capture-templates
+        '(("t" "todo" entry (file+headline "todo.org" "Inbox")
+           "* TODO %?"
+           :prepend t))))
+
+;; --- Org Modern ---
+(use-package org-modern
+  :ensure (:wait t)
+  :after org
+  :hook (org-mode . org-modern-mode)
+  :custom
+  (org-modern-hide-stars nil)
+  (org-modern-keyword nil))
+
+;; --- Org-Roam ---
+(use-package org-roam
+  :ensure (:wait t)
+  :after org
+  :demand t
+  :general
+  (my/leader
+    "n"  '(:ignore t :wk "notes")
+    "nf" '(org-roam-node-find :wk "find node")
+    "ni" '(org-roam-node-insert :wk "insert node")
+    "nb" '(org-roam-buffer-toggle :wk "backlinks")
+    "nd" '(:ignore t :wk "dailies")
+    "ndt" '(org-roam-dailies-goto-today :wk "today")
+    "ndy" '(org-roam-dailies-goto-yesterday :wk "yesterday")
+    "ndd" '(org-roam-dailies-goto-date :wk "goto date"))
+  :custom
+  (org-roam-directory "~/org/")
+  (org-roam-db-location (file-name-concat "~/org/" ".org-roam.db"))
+  (org-roam-dailies-directory "journal/")
+  :config
+  (org-roam-db-autosync-mode 1))
+#+end_src
+
+** Denote-style Keywords for Org-Roam
+
+Your custom functions for Denote-style keyword tagging in org-roam
+captures.  Ported directly from your Doom config.
+
+#+begin_src emacs-lisp
+(defvar my/org-roam-denote-last-keywords ""
+  "Keywords for the last Org-roam capture, for reuse in templates.")
+
+(defun my/org-roam-denote-keyword-suffix ()
+  "Prompt once for Denote-style keywords and return `__kw1_kw2' or \"\"."
+  (setq my/org-roam-denote-last-keywords
+        (string-trim (downcase
+                      (read-string "Keywords (space-separated, optional): "))))
+  (if (string-empty-p my/org-roam-denote-last-keywords)
+      ""
+    (concat "__"
+            (replace-regexp-in-string
+             "[^[:alnum:]]+" "_"
+             my/org-roam-denote-last-keywords))))
+
+(defun my/org-roam-denote-filetags ()
+  "Return last keywords as Denote-style :tag1:tag2: string."
+  (if (or (not (boundp 'my/org-roam-denote-last-keywords))
+          (string-empty-p my/org-roam-denote-last-keywords))
+      ""
+    (let* ((words (split-string my/org-roam-denote-last-keywords "[ ,;]+" t))
+           (sanitized
+            (mapcar (lambda (w)
+                      (replace-regexp-in-string "[^[:alnum:]]+" "_" (downcase w)))
+                    words)))
+      (concat ":" (mapconcat #'identity sanitized ":") ":"))))
+
+;; Capture template using your Denote-style naming convention.
+;; Adjust the template file path if needed.
+(with-eval-after-load 'org-roam
+  (setq org-roam-capture-templates
+        `(("n" "note" plain
+           ,(format "%%[%s/template/note.org]" org-roam-directory)
+           :target (file+head
+                    ,(concat "notes/%<%Y%m%dT%H%M%S>--${slug}"
+                             "%(my/org-roam-denote-keyword-suffix).org")
+                    "")
+           :unnarrowed t))))
+#+end_src
+
+* Development: LSP, Tree-Sitter, Languages
+
+** Eglot (LSP)
+
+Eglot is built into Emacs 29+ and is lighter than lsp-mode.  Your Doom
+config already uses =+eglot=, so this is a direct port.
+
+#+begin_src emacs-lisp
+(use-builtin eglot
+  :hook ((python-mode . eglot-ensure)
+         (python-ts-mode . eglot-ensure)
+         (rust-mode . eglot-ensure)
+         (rust-ts-mode . eglot-ensure)
+         (go-mode . eglot-ensure)
+         (go-ts-mode . eglot-ensure)
+         (c-mode . eglot-ensure)
+         (c++-mode . eglot-ensure)
+         (c-ts-mode . eglot-ensure)
+         (c++-ts-mode . eglot-ensure)
+         (sh-mode . eglot-ensure)
+         (bash-ts-mode . eglot-ensure)
+         (swift-mode . eglot-ensure)
+         (json-mode . eglot-ensure)
+         (json-ts-mode . eglot-ensure))
+  :config
+  (setq eglot-autoshutdown t           ; kill server when last buffer closes
+        eglot-events-buffer-size 0))   ; disable event logging for performance
+#+end_src
+
+** Tree-Sitter
+
+Emacs 29+ has native tree-sitter support.  The =treesit-auto= package
+automatically installs grammars and remaps major modes to their
+=-ts-mode= variants.
+
+#+begin_src emacs-lisp
+(use-package treesit-auto
+  :ensure (:wait t)
+  :demand t
+  :config
+  (setq treesit-auto-install 'prompt)
+  (treesit-auto-add-to-auto-mode-alist 'all)
+  (global-treesit-auto-mode 1))
+#+end_src
+
+** Language Packages
+
+These are only needed for languages that don't have built-in tree-sitter
+modes or need extra tooling (like cargo integration for Rust).
+
+#+begin_src emacs-lisp
+;; Rust
+(use-package rust-mode
+  :ensure (:wait t)
+  :mode "\\.rs\\'"
+  :config
+  (setq rust-format-on-save t))
+
+;; Go
+(use-package go-mode
+  :ensure (:wait t)
+  :mode "\\.go\\'")
+
+;; Markdown
+(use-package markdown-mode
+  :ensure (:wait t)
+  :mode ("\\.md\\'" . markdown-mode))
+
+;; YAML / TOML / etc. — `data' formats from your Doom config.
+;; treesit-auto handles most of these, but explicit packages give
+;; you better defaults.
+(use-package yaml-mode
+  :ensure (:wait t)
+  :mode "\\.ya?ml\\'")
+#+end_src
+
+* Terminal: Vterm
+
+#+begin_src emacs-lisp
+(use-package vterm
+  :ensure (:wait t)
+  :commands vterm
+  :general
+  (my/leader
+    "ot" '(vterm :wk "terminal"))
+  :config
+  (setq vterm-max-scrollback 10000))
+#+end_src
+
+* Dired
+
+#+begin_src emacs-lisp
+(use-builtin dired
+  :hook (dired-mode . dired-hide-details-mode)
+  :config
+  ;; On macOS, use GNU ls from coreutils for --group-directories-first.
+  (when (and (eq system-type 'darwin) (executable-find "gls"))
+    (setq insert-directory-program "gls"))
+  (setq dired-listing-switches
+        (if (and insert-directory-program
+                 (string-match-p "gls\\'" insert-directory-program))
+            "-alh --group-directories-first"
+          "-alh")
+        dired-dwim-target t    ; suggest other dired window as target
+        dired-kill-when-opening-new-dired-buffer t))
+
+(use-package nerd-icons-dired
+  :ensure (:wait t)
+  :hook (dired-mode . nerd-icons-dired-mode))
+#+end_src
+
+* Workspace / Tab Management
+
+Doom's =workspaces= module wraps =tab-bar-mode=.  We use it directly with
+some quality-of-life keybindings.
+
+#+begin_src emacs-lisp
+(use-builtin tab-bar
+  :config
+  (setq tab-bar-show 1              ; only show tab bar if >1 tab
+        tab-bar-close-button-show nil
+        tab-bar-new-tab-choice "*scratch*")
+  (tab-bar-mode 1)
+  :general
+  (my/leader
+    "TAB" '(:ignore t :wk "workspace")
+    "TAB TAB" '(tab-bar-switch-to-tab :wk "switch")
+    "TAB n" '(tab-bar-new-tab :wk "new")
+    "TAB d" '(tab-bar-close-tab :wk "close")
+    "TAB r" '(tab-bar-rename-tab :wk "rename")
+    "TAB 1" '((lambda () (interactive) (tab-bar-select-tab 1)) :wk "tab 1")
+    "TAB 2" '((lambda () (interactive) (tab-bar-select-tab 2)) :wk "tab 2")
+    "TAB 3" '((lambda () (interactive) (tab-bar-select-tab 3)) :wk "tab 3")))
+#+end_src
+
+* macOS Compatibility
+
+#+begin_src emacs-lisp
+(when (eq system-type 'darwin)
+
+  ;; Use the macOS trash instead of rm.
+  (setq delete-by-moving-to-trash t
+        trash-directory "~/.Trash"))
+#+end_src
+
+* Pomodoro (Stub)
+
+Your Doom config enables =+pomodoro= for org-mode.  The underlying
+package is =org-pomodoro=.
+
+#+begin_src emacs-lisp
+(use-package org-pomodoro
+  :ensure (:wait t)
+  :after org
+  :general
+  (my/local-leader :keymaps 'org-mode-map
+    "p" '(org-pomodoro :wk "pomodoro")))
+#+end_src
+
+* What's Not Here (Yet)
+
+A few things from your Doom config that are intentionally left out of
+this scaffold so you can add them as learning exercises:
+
+- *chezmoi integration*: Look at the =chezmoi.el= package.
+- *folding*: Investigate =hideshow= (built-in) or =origami=.
+- *popup management*: Doom's =+popup= system is one of its most complex
+  pieces.  Start with =display-buffer-alist= and =shackle= or =popper=.
+- *file templates*: Doom's template system uses yasnippet under the hood.
+  You can set up =auto-insert-mode= with yasnippet for the same effect.
+- *LLM integration*: Look at =gptel= or =ellama= — both work with
+  multiple backends and are more transparent than Doom's =llm= module.
+- *Spell checking*: =jinx= is a modern alternative to flyspell that uses
+  enchant and is noticeably faster.
+- *Additional evil packages*: =evil-matchit= (%), =evil-lion= (alignment),
+  =evil-exchange= (cx) — add as you find you miss them.

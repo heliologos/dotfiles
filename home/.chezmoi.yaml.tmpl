@@ -25,7 +25,7 @@
 {{- $passwordManager := promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
 
 {{- /* optional programs: multiple selections */ -}}
-{{- $enabledCapacities := promptMultichoiceOnce . "capacities" "Enable capacities" (list "client" "server") (list $capacities) -}}
+{{- $enabledCapacities := promptMultichoiceOnce . "capacities" "Enable capacities" (list "client" "server" "gaming" "cache") (list $capacities) -}}
 {{- $enabledShells := promptMultichoiceOnce . "programs.shells" "Enable shells" $availableShells (list $shell) -}}
 {{- $enabledPasswordManagers := promptMultichoiceOnce . "programs.password_managers" "Enable password managers" $availablePasswordManagers (list $passwordManager) -}}
 {{- $enabledTerminals := promptMultichoiceOnce . "programs.terminals" "Enable terminals" $availableTerminals (list $terminal) -}}

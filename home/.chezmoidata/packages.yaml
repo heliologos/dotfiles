@@ -4,6 +4,7 @@ packages:
       taps: []
       formulae:
         - chezmoi
+        - dockutil
         - eza
         - fd
         - lazygit
@@ -13,7 +14,8 @@ packages:
         - zellij
         - zimfw
         - zoxide
-      casks: []
+      casks:
+        - font-jetbrains-mono-nerd-font
     capacities:
       server:
         brew:
@@ -91,7 +93,7 @@ packages:
             - jimeh/emacs-builds
           formulae: []
           casks:
-            - emacs-app-good
+            - emacs-app-monthly
       vscode:
         brew:
           taps: []
