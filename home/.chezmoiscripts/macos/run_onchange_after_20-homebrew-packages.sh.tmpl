@@ -1,6 +1,3 @@
-{{ if and (eq .chezmoi.os "darwin") .flags.is_work_owned -}}
-{{   includeTemplate "../install/macos/work/install-homebrew-packages.sh.tmpl" . }}
-{{- end }}
 {{- if eq .chezmoi.os "darwin" -}}
 {{   includeTemplate "../install/macos/home/install-homebrew-packages.sh.tmpl" . }}
 {{- end }}

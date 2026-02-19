@@ -1,6 +1,6 @@
 packages:
-  darwin:
-    brew:
+  brew:
+    base:
       taps: []
       formulae:
         - chezmoi
@@ -16,176 +16,148 @@ packages:
         - zoxide
       casks:
         - font-jetbrains-mono-nerd-font
-    password_managers:
-      1password:
-        brew:
+
+    ownership:
+      personal:
+        taps: []
+        formulae:
+          - yt-dlp
+        casks: []
+      work_flex:
+        taps: []
+        formulae: []
+        casks: []
+      work_strict:
+        taps: []
+        formulae: []
+        casks: []
+
+    profiles:
+      portable:
+        taps: []
+        formulae: []
+        casks: []
+      rig:
+        taps: []
+        formulae: []
+        casks: []
+      server:
+        taps: []
+        formulae: []
+        casks: []
+
+    capacities:
+      gaming:
+        taps: []
+        formulae: []
+        casks: []
+      development:
+        taps: []
+        formulae: []
+        casks: []
+      media:
+        taps: []
+        formulae: []
+        casks:
+          - roon
+
+    programs:
+      password_managers:
+        1password:
           taps: []
           formulae: []
           casks:
             - 1password-cli
             - 1password
-      bitwarden:
-        brew:
+        bitwarden:
           taps: []
           formulae:
             - bitwarden-cli
           casks:
             - bitwarden
-      proton-pass:
-        brew:
+        proton-pass:
           taps: []
           formulae: []
           casks:
             - proton-pass
-    terminals:
-      ghostty:
-        brew:
+
+      terminals:
+        ghostty:
           taps: []
           formulae: []
           casks:
             - ghostty
-      kitty:
-        brew:
+        kitty:
           taps: []
           formulae: []
           casks:
             - kitty
-      alacritty:
-        brew:
+        alacritty:
           taps: []
           formulae: []
           casks:
             - alacritty
-      wezterm:
-        brew:
+        wezterm:
           taps: []
           formulae: []
           casks:
             - wezterm
-      iterm2:
-        brew:
+        iterm2:
           taps: []
           formulae: []
           casks:
             - iterm2
-    editors:
-      nvim:
-        brew:
+
+      editors:
+        nvim:
           taps: []
           formulae:
             - neovim
           casks: []
-      emacs:
-        brew:
+        emacs:
           taps:
             - jimeh/emacs-builds
           formulae: []
           casks:
             - emacs-app-monthly
-      vscode:
-        brew:
+        vscode:
           taps: []
           formulae: []
           casks:
             - visual-studio-code
-      zed:
-        brew:
+        zed:
           taps: []
           formulae: []
           casks:
             - zed
-    shells:
-      zsh:
-        brew:
+
+      shells:
+        zsh:
           taps: []
           formulae:
             - zsh
           casks: []
-      fish:
-        brew:
+        fish:
           taps: []
           formulae:
             - fish
           casks: []
-      nushell:
-        brew:
+        nushell:
           taps: []
           formulae:
             - nushell
           casks: []
-    toolchains:
-      mise:
-        brew:
+
+      toolchains:
+        mise:
           taps: []
           formulae:
             - mise
           casks: []
-    browsers:
-      brave:
-        brew:
+
+      browsers:
+        brave:
           taps: []
           formulae: []
           casks:
             - brave-browser
-
-  ownership:
-    personal:
-      darwin:
-        brew:
-          taps: []
-          formulae:
-            - yt-dlp
-          casks: []
-    work_flex:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-    work_strict:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-
-  profiles:
-    portable:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-    rig:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-    server:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-
-  capacities:
-    gaming:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-    development:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
-    media:
-      darwin:
-        brew:
-          taps: []
-          formulae: []
-          casks:
-            - roon

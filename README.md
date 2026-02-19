@@ -49,4 +49,12 @@ chezmoi re-add
 ## Notes
 
 - Secrets are stored as age-encrypted files (`*.age`) in source.
+- Work-sensitive package data can live in `install/macos/work/packages.work.yaml.age`
+  and is merged into package templates only for work-owned systems.
+- Homebrew package selection uses layered data in `home/.chezmoidata/packages.yaml`
+  under `packages.brew`, applied in this order: `base`, `ownership`, `profiles`,
+  `capacities`, then program selectors (`password_managers`, `terminals`,
+  `editors`, `shells`, `toolchains`, `browsers`).
+- Homebrew package installation is data-driven through the layered config above;
+  there is no separate work-only imperative package installer script.
 - Work-only Git overrides are included when `ownership` is work-owned.
