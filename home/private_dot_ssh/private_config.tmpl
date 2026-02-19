@@ -1,4 +1,4 @@
-{{ if eq .profile "work" -}}
+{{ if .flags.is_work_owned -}}
 Include ~/.ssh/config-work
 {{- end }}
 

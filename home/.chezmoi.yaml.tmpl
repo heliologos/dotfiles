@@ -1,8 +1,23 @@
-{{- $profile := promptChoiceOnce . "profile" "What environment are you in" (list "home" "work") "work" -}}
-{{- $capacities := ("client") -}}
+{{- $ownershipChoices := list "personal" "work_flex" "work_strict" -}}
+{{- $ownership := promptChoiceOnce . "ownership" "Who owns this system" $ownershipChoices "personal" -}}
+
+{{- if not (has $ownership $ownershipChoices) -}}
+  {{- $ownership = "personal" -}}
+{{- end -}}
+
+{{- $profileChoices := list "portable" "rig" "server" -}}
+{{- $profile := promptChoiceOnce . "profile" "Which system profile is this" $profileChoices "portable" -}}
+
+{{- if not (has $profile $profileChoices) -}}
+  {{- $profile = "portable" -}}
+{{- end -}}
+
+{{- $defaultCapacity := "development" -}}
+{{- $isWorkOwned := or (eq $ownership "work_flex") (eq $ownership "work_strict") -}}
+
 {{- $name := "" -}}
 {{- $email := "" -}}
-{{- if eq $profile "work" -}}
+{{- if $isWorkOwned -}}
   {{- $name = or (env "WORK_NAME") (promptStringOnce . "name" "What is your work name") -}}
   {{- $email = or (env "WORK_EMAIL") (promptStringOnce . "email" "What is your work email") -}}
 {{- else -}}
@@ -16,6 +31,7 @@
 {{- $availableEditors := list "nvim" "vim" "emacs" "vscode" "zed" -}}
 {{- $availablePasswordManagers := list "1password" "bitwarden" "proton-pass" -}}
 {{- $availableToolchains := list "mise" "go" "node" "python" "rust" -}}
+{{- $capacityChoices := list "gaming" "development" "media" -}}
 
 {{- /* default programs: single choice per category */ -}}
 {{- $shell := "zsh" -}}
@@ -25,7 +41,16 @@
 {{- $passwordManager := promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
 
 {{- /* optional programs: multiple selections */ -}}
-{{- $enabledCapacities := promptMultichoiceOnce . "capacities" "Enable capacities" (list "client" "server" "gaming" "cache") (list $capacities) -}}
+{{- $enabledCapacitiesRaw := promptMultichoiceOnce . "capacities" "Enable capacities" $capacityChoices (list $defaultCapacity) -}}
+{{- $enabledCapacities := list -}}
+{{- range $enabledCapacitiesRaw -}}
+  {{- if has . $capacityChoices -}}
+    {{- $enabledCapacities = append $enabledCapacities . -}}
+  {{- end -}}
+{{- end -}}
+{{- if eq (len $enabledCapacities) 0 -}}
+  {{- $enabledCapacities = list $defaultCapacity -}}
+{{- end -}}
 {{- $enabledShells := promptMultichoiceOnce . "programs.shells" "Enable shells" $availableShells (list $shell) -}}
 {{- $enabledPasswordManagers := promptMultichoiceOnce . "programs.password_managers" "Enable password managers" $availablePasswordManagers (list $passwordManager) -}}
 {{- $enabledTerminals := promptMultichoiceOnce . "programs.terminals" "Enable terminals" $availableTerminals (list $terminal) -}}
@@ -47,8 +72,11 @@ data:
   name: {{ $name | quote }}
   email: {{ $email | quote }}
   signing_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH3h9tju97PYWlIax2f6vDPgj8kT3hmcvZGHf5CR0kXI"
+  ownership: {{ $ownership | quote }}
   profile: {{ $profile | quote }}
   capacities: {{ $enabledCapacities | toJson }}
+  flags:
+    is_work_owned: {{ $isWorkOwned }}
   defaults:
     shell: {{ $shell | quote }}
     browser: {{ $browser | quote }}

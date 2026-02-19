@@ -16,18 +16,6 @@ packages:
         - zoxide
       casks:
         - font-jetbrains-mono-nerd-font
-    capacities:
-      server:
-        brew:
-          taps: []
-          formulae: []
-          casks:
-            - roon
-      client:
-        brew:
-          taps: []
-          formulae: []
-          casks: []
     password_managers:
       1password:
         brew:
@@ -140,10 +128,64 @@ packages:
           casks:
             - brave-browser
 
-  profiles:
-    home:
+  ownership:
+    personal:
+      darwin:
+        brew:
+          taps: []
+          formulae:
+            - yt-dlp
+          casks: []
+    work_flex:
       darwin:
         brew:
           taps: []
           formulae: []
           casks: []
+    work_strict:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+
+  profiles:
+    portable:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+    rig:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+    server:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+
+  capacities:
+    gaming:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+    development:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks: []
+    media:
+      darwin:
+        brew:
+          taps: []
+          formulae: []
+          casks:
+            - roon

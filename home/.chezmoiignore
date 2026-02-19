@@ -5,7 +5,7 @@
 .hushlogin
 {{ end -}}
 .config/git/config-work.age
-{{- if ne .profile "work" }}
+{{- if not .flags.is_work_owned }}
 .config/git/config-work
 {{- end }}
 key.txt.age

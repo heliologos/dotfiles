@@ -6,7 +6,7 @@ if [[ "{{ .chezmoi.os }}" != "darwin" ]]; then
   exit 0
 fi
 
-if [[ "{{ .profile }}" != "work" ]]; then
+if [[ "{{ .flags.is_work_owned }}" != "true" ]]; then
   exit 0
 fi
 

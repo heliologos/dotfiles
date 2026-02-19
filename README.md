@@ -16,11 +16,13 @@ What it does:
 - ensures an AGE identity exists at `~/.config/chezmoi/key.txt`
 - runs `chezmoi apply`
 
-## Profiles
+## Targeting model
 
 On first apply, templates prompt for:
-- `profile`: `home` or `work`
-- work identity values (`name`, `email`) when profile is `work`
+- `ownership`: `personal`, `work_flex`, or `work_strict`
+- `profile`: `portable`, `rig`, or `server`
+- `capacities`: `gaming`, `development`, and/or `media`
+- work identity values (`name`, `email`) when ownership is work-owned
 - defaults for shell/editor/terminal/browser/password manager
 
 You can preseed work identity via env vars:
@@ -41,10 +43,10 @@ chezmoi re-add
 ## Repo layout
 
 - `home/`: files managed in `$HOME`
-- `install/`: platform/profile-specific install helpers
+- `install/`: platform and ownership-aware install helpers
 - `bootstrap.sh`: one-shot setup script
 
 ## Notes
 
 - Secrets are stored as age-encrypted files (`*.age`) in source.
-- Work-only Git overrides are included conditionally by profile.
+- Work-only Git overrides are included when `ownership` is work-owned.

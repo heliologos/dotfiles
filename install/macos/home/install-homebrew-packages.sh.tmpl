@@ -6,18 +6,24 @@ if [[ "{{ .chezmoi.os }}" != "darwin" ]]; then
   exit 0
 fi
 
-{{ $capacities := index . "capacities" | default (list "client") -}}
+{{ $capacities := index . "capacities" | default (list "development") -}}
 {{ $packages := index . "packages" | default dict -}}
 {{ $darwin := index $packages "darwin" | default dict -}}
 {{ $brew := index $darwin "brew" | default dict -}}
-{{ $profiles := index $packages "profiles" | default dict -}}
 
-{{ $profile := index . "profile" | default "home" -}}
+{{ $ownerships := index $packages "ownership" | default dict -}}
+{{ $ownership := index . "ownership" | default "personal" -}}
+{{ $ownershipPackages := index $ownerships $ownership | default dict -}}
+{{ $ownershipDarwin := index $ownershipPackages "darwin" | default dict -}}
+{{ $ownershipBrew := index $ownershipDarwin "brew" | default dict -}}
+
+{{ $profiles := index $packages "profiles" | default dict -}}
+{{ $profile := index . "profile" | default "portable" -}}
 {{ $profilePackages := index $profiles $profile | default dict -}}
 {{ $profileDarwin := index $profilePackages "darwin" | default dict -}}
 {{ $profileBrew := index $profileDarwin "brew" | default dict -}}
 
-{{ $darwinCapacities := index $darwin "capacities" | default dict -}}
+{{ $packageCapacities := index $packages "capacities" | default dict -}}
 {{ $darwinPasswordManagers := index $darwin "password_managers" | default dict -}}
 {{ $darwinTerminals := index $darwin "terminals" | default dict -}}
 {{ $darwinEditors := index $darwin "editors" | default dict -}}
@@ -50,118 +56,205 @@ BREWFILE_TMP="$(mktemp "${TMPDIR:-/tmp}/chezmoi-brewfile.XXXXXX")"
 trap 'rm -f "${BREWFILE_TMP}"' EXIT
 
 cat >"${BREWFILE_TMP}" <<'EOF_BREWFILE'
+# ===== TAPS =====
 {{ range (index $brew "taps") -}}
+tap {{ . | quote }}
+{{ end -}}
+{{ range (index $ownershipBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
 {{ range (index $profileBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $brew "formulae") -}}
-brew {{ . | quote }}
-{{ end -}}
-{{ range (index $profileBrew "formulae") -}}
-brew {{ . | quote }}
-{{ end -}}
-{{ range (index $brew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ range (index $profileBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{- /* Capacity-specific packages */ -}}
+{{- /* Capacity-specific taps */ -}}
 {{ range $capacities -}}
-{{ $capPkgs := index $darwinCapacities . | default dict -}}
-{{ $capBrew := index $capPkgs "brew" | default dict -}}
+{{ $capPkgs := index $packageCapacities . | default dict -}}
+{{ $capDarwin := index $capPkgs "darwin" | default dict -}}
+{{ $capBrew := index $capDarwin "brew" | default dict -}}
 {{ range (index $capBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $capBrew "formulae") -}}
-brew {{ . | quote }}
 {{ end -}}
-{{ range (index $capBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ end -}}
-{{- /* Password manager packages */ -}}
+{{- /* Password manager taps */ -}}
 {{ range $enabledPasswordManagers -}}
 {{ $pmPkgs := index $darwinPasswordManagers . | default dict -}}
 {{ $pmBrew := index $pmPkgs "brew" | default dict -}}
 {{ range (index $pmBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $pmBrew "formulae") -}}
-brew {{ . | quote }}
 {{ end -}}
-{{ range (index $pmBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ end -}}
-{{- /* Terminal packages */ -}}
+{{- /* Terminal taps */ -}}
 {{ range $enabledTerminals -}}
 {{ $termPkgs := index $darwinTerminals . | default dict -}}
 {{ $termBrew := index $termPkgs "brew" | default dict -}}
 {{ range (index $termBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $termBrew "formulae") -}}
-brew {{ . | quote }}
 {{ end -}}
-{{ range (index $termBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ end -}}
-{{- /* Editor packages */ -}}
+{{- /* Editor taps */ -}}
 {{ range $enabledEditors -}}
 {{ $edPkgs := index $darwinEditors . | default dict -}}
 {{ $edBrew := index $edPkgs "brew" | default dict -}}
 {{ range (index $edBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $edBrew "formulae") -}}
-brew {{ . | quote }}
 {{ end -}}
-{{ range (index $edBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ end -}}
-{{- /* Shell packages */ -}}
+{{- /* Shell taps */ -}}
 {{ range $enabledShells -}}
 {{ $shPkgs := index $darwinShells . | default dict -}}
 {{ $shBrew := index $shPkgs "brew" | default dict -}}
 {{ range (index $shBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $shBrew "formulae") -}}
-brew {{ . | quote }}
 {{ end -}}
-{{ range (index $shBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ end -}}
-{{- /* Toolchain packages */ -}}
+{{- /* Toolchain taps */ -}}
 {{ range $enabledToolchains -}}
 {{ $tcPkgs := index $darwinToolchains . | default dict -}}
 {{ $tcBrew := index $tcPkgs "brew" | default dict -}}
 {{ range (index $tcBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
-{{ range (index $tcBrew "formulae") -}}
-brew {{ . | quote }}
 {{ end -}}
-{{ range (index $tcBrew "casks") -}}
-cask {{ . | quote }}
-{{ end -}}
-{{ end -}}
-{{- /* Default browser package */ -}}
+{{- /* Default browser taps */ -}}
 {{ if $defaultBrowser -}}
 {{ $brPkgs := index $darwinBrowsers $defaultBrowser | default dict -}}
 {{ $brBrew := index $brPkgs "brew" | default dict -}}
 {{ range (index $brBrew "taps") -}}
 tap {{ . | quote }}
 {{ end -}}
+{{ end -}}
+
+# ===== FORMULAE =====
+{{ range (index $brew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range (index $ownershipBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ range (index $profileBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{- /* Capacity-specific formulae */ -}}
+{{ range $capacities -}}
+{{ $capPkgs := index $packageCapacities . | default dict -}}
+{{ $capDarwin := index $capPkgs "darwin" | default dict -}}
+{{ $capBrew := index $capDarwin "brew" | default dict -}}
+{{ range (index $capBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Password manager formulae */ -}}
+{{ range $enabledPasswordManagers -}}
+{{ $pmPkgs := index $darwinPasswordManagers . | default dict -}}
+{{ $pmBrew := index $pmPkgs "brew" | default dict -}}
+{{ range (index $pmBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Terminal formulae */ -}}
+{{ range $enabledTerminals -}}
+{{ $termPkgs := index $darwinTerminals . | default dict -}}
+{{ $termBrew := index $termPkgs "brew" | default dict -}}
+{{ range (index $termBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Editor formulae */ -}}
+{{ range $enabledEditors -}}
+{{ $edPkgs := index $darwinEditors . | default dict -}}
+{{ $edBrew := index $edPkgs "brew" | default dict -}}
+{{ range (index $edBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Shell formulae */ -}}
+{{ range $enabledShells -}}
+{{ $shPkgs := index $darwinShells . | default dict -}}
+{{ $shBrew := index $shPkgs "brew" | default dict -}}
+{{ range (index $shBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Toolchain formulae */ -}}
+{{ range $enabledToolchains -}}
+{{ $tcPkgs := index $darwinToolchains . | default dict -}}
+{{ $tcBrew := index $tcPkgs "brew" | default dict -}}
+{{ range (index $tcBrew "formulae") -}}
+brew {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Default browser formulae */ -}}
+{{ if $defaultBrowser -}}
+{{ $brPkgs := index $darwinBrowsers $defaultBrowser | default dict -}}
+{{ $brBrew := index $brPkgs "brew" | default dict -}}
 {{ range (index $brBrew "formulae") -}}
 brew {{ . | quote }}
 {{ end -}}
+{{ end -}}
+
+# ===== CASKS =====
+{{ range (index $brew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ range (index $ownershipBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ range (index $profileBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{- /* Capacity-specific casks */ -}}
+{{ range $capacities -}}
+{{ $capPkgs := index $packageCapacities . | default dict -}}
+{{ $capDarwin := index $capPkgs "darwin" | default dict -}}
+{{ $capBrew := index $capDarwin "brew" | default dict -}}
+{{ range (index $capBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Password manager casks */ -}}
+{{ range $enabledPasswordManagers -}}
+{{ $pmPkgs := index $darwinPasswordManagers . | default dict -}}
+{{ $pmBrew := index $pmPkgs "brew" | default dict -}}
+{{ range (index $pmBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Terminal casks */ -}}
+{{ range $enabledTerminals -}}
+{{ $termPkgs := index $darwinTerminals . | default dict -}}
+{{ $termBrew := index $termPkgs "brew" | default dict -}}
+{{ range (index $termBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Editor casks */ -}}
+{{ range $enabledEditors -}}
+{{ $edPkgs := index $darwinEditors . | default dict -}}
+{{ $edBrew := index $edPkgs "brew" | default dict -}}
+{{ range (index $edBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Shell casks */ -}}
+{{ range $enabledShells -}}
+{{ $shPkgs := index $darwinShells . | default dict -}}
+{{ $shBrew := index $shPkgs "brew" | default dict -}}
+{{ range (index $shBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Toolchain casks */ -}}
+{{ range $enabledToolchains -}}
+{{ $tcPkgs := index $darwinToolchains . | default dict -}}
+{{ $tcBrew := index $tcPkgs "brew" | default dict -}}
+{{ range (index $tcBrew "casks") -}}
+cask {{ . | quote }}
+{{ end -}}
+{{ end -}}
+{{- /* Default browser casks */ -}}
+{{ if $defaultBrowser -}}
+{{ $brPkgs := index $darwinBrowsers $defaultBrowser | default dict -}}
+{{ $brBrew := index $brPkgs "brew" | default dict -}}
 {{ range (index $brBrew "casks") -}}
 cask {{ . | quote }}
 {{ end -}}
