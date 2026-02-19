@@ -13,12 +13,11 @@ the "what."
 
 Note on =:ensure (:wait t)=: Elpaca installs packages asynchronously by
 default.  When a =use-package= form includes =:demand t= or =:after=,
-it tries to =require= the package immediately — which fails if elpaca
-hasn't finished building it yet.  =:ensure (:wait t)= tells elpaca to
-install synchronously, blocking until the package is ready.  This makes
-the first launch slower but eliminates load-order race conditions.
+it may =require= a package before build/install has finished.
+=:ensure (:wait t)= switches that package to synchronous install, which
+trades a slower first launch for predictable load order.
 
-* Core Defaults
+* Core defaults
 
 Settings that affect Emacs' baseline behavior before any packages load.
 
@@ -56,7 +55,7 @@ Settings that affect Emacs' baseline behavior before any packages load.
 (setq display-line-numbers-type t)
 (global-display-line-numbers-mode 1)
 
-;; Split behavior (from your Doom config).
+;; Window split behavior.
 (setq evil-split-window-below t
       evil-vsplit-window-right t)
 
@@ -75,24 +74,23 @@ Settings that affect Emacs' baseline behavior before any packages load.
 (savehist-mode 1)
 #+end_src
 
-* Package Manager Helpers
+* Package manager helper
 
 Convenience macro for built-in packages that shouldn't go through elpaca.
 
 #+begin_src emacs-lisp
-;; For built-in packages, we need :ensure nil so elpaca doesn't try
-;; to download them.  This is the main papercut versus Doom's `after!'.
+;; Built-in packages should skip installation.
+;; `:ensure nil` avoids asking elpaca to fetch them.
 (defmacro use-builtin (name &rest args)
   "Like `use-package' but with :ensure nil for built-in packages."
   (declare (indent 1))
   `(use-package ,name :ensure nil ,@args))
 #+end_src
 
-* Evil Mode
+* evil-mode
 
-Evil is the biggest single piece of your Doom setup.  =evil-collection=
-handles the integration glue for dozens of modes that Doom's =+everywhere=
-flag provides.
+Vim-style editing with Evil, plus integrations for common major modes.
+=evil-collection= handles most mode-specific glue automatically.
 
 #+begin_src emacs-lisp
 (use-package evil
@@ -116,7 +114,7 @@ flag provides.
   :config
   (evil-collection-init))
 
-;; gc/gcc for commenting — lightweight alternative to Doom's built-in.
+;; gc/gcc commenting commands.
 (use-package evil-nerd-commenter
   :ensure (:wait t)
   :after evil
@@ -131,11 +129,10 @@ flag provides.
   (global-evil-surround-mode 1))
 #+end_src
 
-* Keybinding Infrastructure
+* Keybinding infrastructure
 
-Doom uses its own =map!= macro over =general.el=.  We use general directly,
-which is what Doom wraps anyway.  This gives you a leader key (SPC) in
-normal/visual state, similar to Doom's default.
+=general.el= is the keybinding layer used here.  It defines a leader key
+on SPC in normal/visual/emacs states, plus a local leader on =SPC m=.
 
 #+begin_src emacs-lisp
 (use-package general
@@ -222,6 +219,9 @@ normal/visual state, similar to Doom's default.
     "s" '(:ignore t :wk "search")
     ;; These get filled in by consult below.
 
+    ;; --- Command ---
+    ":" '(execute-extended-command :wk "M-x")
+
     ;; --- Toggle ---
     "t" '(:ignore t :wk "toggle")
     "tt" '(load-theme :wk "choose theme")
@@ -230,7 +230,7 @@ normal/visual state, similar to Doom's default.
 
 * Completion: Vertico + Orderless + Corfu
 
-This is Doom's =:completion= stack.  The four packages work together:
+Completion stack overview:
 - *vertico*: vertical minibuffer completion UI
 - *orderless*: flexible matching (space-separated patterns)
 - *marginalia*: annotations in the minibuffer (file sizes, docstrings)
@@ -275,7 +275,7 @@ This is Doom's =:completion= stack.  The four packages work together:
     "sp" '(consult-ripgrep :wk "search project")
     "si" '(consult-imenu :wk "imenu")))
 
-;; --- In-Buffer Completion ---
+;; --- In-buffer completion ---
 
 (use-package corfu
   :ensure (:wait t)
@@ -299,10 +299,10 @@ This is Doom's =:completion= stack.  The four packages work together:
   (add-hook 'completion-at-point-functions #'cape-file))
 #+end_src
 
-* Which-Key
+* which-key
 
 Shows available keybindings in a popup after you press a prefix.
-Doom includes this by default; it's nearly essential with a leader key setup.
+Useful with leader-key workflows because it keeps prefixes discoverable.
 
 #+begin_src emacs-lisp
 (use-package which-key
@@ -317,23 +317,47 @@ Doom includes this by default; it's nearly essential with a leader key setup.
 
 #+begin_src emacs-lisp
 ;; --- Theme ---
-;; doom-themes is a standalone package — it works fine outside Doom.
+;; Theme package.
 (use-package doom-themes
   :ensure (:wait t)
   :demand t
   :config
+  ;; TODO: remove this when things are working again lol
+  (setcdr (assoc 'gnus-group-news-low-empty doom-themes-base-faces)
+          '(:inherit 'gnus-group-mail-1-empty :weight 'normal))
   (load-theme 'doom-tokyo-night t)
   (doom-themes-visual-bell-config)
   (doom-themes-org-config))
 
 ;; --- Font ---
-;; Set after theme so face remapping doesn't fight the theme.
-(set-face-attribute 'default nil
-                    :family "JetBrainsMono Nerd Font"
-                    :height 120) ; height is in 1/10pt, so 120 = 12pt
+;; Doom-like baseline font setup, including future frames.
+(defun my/apply-default-fonts ()
+  "Apply baseline fonts to default, fixed-pitch, and variable-pitch faces."
+  (set-face-attribute 'default nil :family "JetBrainsMono Nerd Font" :height 120)
+  (set-face-attribute 'fixed-pitch nil :family "JetBrainsMono Nerd Font" :height 120)
+  (set-face-attribute 'variable-pitch nil :family "IBM Plex Serif" :height 130 :weight 'regular))
+
+;; Ensure newly-created frames (including capture frames) inherit the same font.
+(add-to-list 'default-frame-alist '(font . "JetBrainsMono Nerd Font-12"))
+(my/apply-default-fonts)
+
+;; Guard against stale face customization cycles in some theme/frame combos.
+(defun my/fix-gnus-group-face-cycles (&rest _)
+  "Break self-referential inheritance in Gnus group faces."
+  (dolist (face (face-list))
+    (let ((name (symbol-name face)))
+      (when (and (string-prefix-p "gnus-group-" name)
+                 (facep face))
+        (set-face-attribute face nil :inherit 'default)))))
+
+;; Apply after theme loads and when new frames are created.
+(advice-add 'load-theme :after #'my/fix-gnus-group-face-cycles)
+(add-hook 'after-make-frame-functions
+          (lambda (_frame) (my/fix-gnus-group-face-cycles)))
+(my/fix-gnus-group-face-cycles)
 
 ;; --- Modeline ---
-;; doom-modeline also works standalone.
+;; Modeline package.
 (use-package doom-modeline
   :ensure (:wait t)
   :demand t
@@ -378,7 +402,7 @@ Snippets, formatting, whitespace, and structural editing.
 
 #+begin_src emacs-lisp
 ;; --- Snippets ---
-;; yasnippet is what Doom's `snippets' module wraps.
+;; Snippet expansion and a shared snippet collection.
 (use-package yasnippet
   :ensure (:wait t)
   :hook (prog-mode . yas-minor-mode)
@@ -389,20 +413,18 @@ Snippets, formatting, whitespace, and structural editing.
   :ensure (:wait t)
   :after yasnippet)
 
-;; --- Electric Pair ---
-;; Auto-close parens, brackets, quotes.  Doom uses smartparens, but
-;; electric-pair-mode is built-in and sufficient for most workflows.
-;; Switch to smartparens later if you want more structural editing.
+;; --- Electric pair ---
+;; Auto-close parens, brackets, and quotes.
+;; Built-in `electric-pair-mode` is enough for most editing workflows.
 (use-builtin electric
   :hook (prog-mode . electric-pair-mode))
 
-;; --- Whitespace Cleanup ---
-;; Trim trailing whitespace on save (mirrors Doom's whitespace +trim).
+;; --- Whitespace cleanup ---
+;; Trim trailing whitespace on save.
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 
-;; --- Format on Save ---
-;; apheleia handles async formatting on save, similar to Doom's
-;; (format +onsave) but without blocking the editor.
+;; --- Format on save ---
+;; Async formatting on save.
 (use-package apheleia
   :ensure (:wait t)
   :demand t
@@ -410,7 +432,7 @@ Snippets, formatting, whitespace, and structural editing.
   (apheleia-global-mode 1))
 #+end_src
 
-* Version Control
+* Version control
 
 #+begin_src emacs-lisp
 ;; --- Magit ---
@@ -425,7 +447,7 @@ Snippets, formatting, whitespace, and structural editing.
     "gl" '(magit-log-current :wk "log")))
 
 ;; --- Diff indicators in the gutter ---
-;; diff-hl is the standalone equivalent of Doom's vc-gutter.
+;; Show changed lines in the fringe.
 (use-package diff-hl
   :ensure (:wait t)
   :demand t
@@ -436,10 +458,10 @@ Snippets, formatting, whitespace, and structural editing.
   (diff-hl-flydiff-mode 1)) ; update diffs without saving
 #+end_src
 
-* Project Management
+* Project management
 
-Doom uses projectile under the hood; built-in =project.el= (Emacs 28+)
-is a lighter alternative that works well with consult.
+Use built-in =project.el= for project navigation and pair it with
+=consult= for search.
 
 #+begin_src emacs-lisp
 (use-builtin project
@@ -452,10 +474,10 @@ is a lighter alternative that works well with consult.
     "pk" '(project-kill-buffers :wk "kill buffers")))
 #+end_src
 
-* Org Mode
+* org-mode
 
-Org is built-in, so we use =:ensure nil=.  This section ports your
-Doom org settings.
+Org is built-in, so this section uses =:ensure nil= and configures core
+agenda/capture defaults.
 
 #+begin_src emacs-lisp
 (use-builtin org
@@ -465,9 +487,20 @@ Doom org settings.
   (my/leader
     "o"  '(:ignore t :wk "org")
     "oa" '(org-agenda :wk "agenda")
-    "oc" '(org-capture :wk "capture"))
+    "oc" '(my/org-capture-in-bottom-window :wk "capture"))
   :config
   (add-to-list 'org-modules 'org-habit)
+
+  (defun my/org-capture-in-bottom-window ()
+    "Run `org-capture' in a bottom side window (20% of frame height)."
+    (interactive)
+    (let ((display-buffer-alist
+           '(("\\*Org Select\\*\\|\\*Capture\\*"
+              (display-buffer-in-side-window)
+              (side . bottom)
+              (slot . 0)
+              (window-height . 0.2)))))
+      (org-capture)))
 
   (setq org-directory "~/org/"
         org-startup-folded 'show2levels
@@ -504,6 +537,18 @@ Doom org settings.
   :demand t
   :general
   (my/leader
+    "of" '(org-roam-node-find :wk "find node")
+    "oi" '(org-roam-node-insert :wk "insert node")
+    "ob" '(org-roam-buffer-toggle :wk "backlinks")
+    "od" '(:ignore t :wk "dailies")
+    "odt" '(org-roam-dailies-goto-today :wk "today")
+    "ody" '(org-roam-dailies-goto-yesterday :wk "yesterday")
+    "odm" '(org-roam-dailies-goto-tomorrow :wk "tomorrow")
+    "odp" '(org-roam-dailies-goto-previous-note :wk "previous note")
+    "odn" '(org-roam-dailies-goto-next-note :wk "next note")
+    "odd" '(org-roam-dailies-goto-date :wk "goto date")
+    "odc" '(org-roam-dailies-capture-today :wk "capture today")
+
     "n"  '(:ignore t :wk "notes")
     "nf" '(org-roam-node-find :wk "find node")
     "ni" '(org-roam-node-insert :wk "insert node")
@@ -520,10 +565,9 @@ Doom org settings.
   (org-roam-db-autosync-mode 1))
 #+end_src
 
-** Denote-style Keywords for Org-Roam
+** Denote-style keywords for org-roam
 
-Your custom functions for Denote-style keyword tagging in org-roam
-captures.  Ported directly from your Doom config.
+Helpers for Denote-style keyword tagging in org-roam captures.
 
 #+begin_src emacs-lisp
 (defvar my/org-roam-denote-last-keywords ""
@@ -570,8 +614,7 @@ captures.  Ported directly from your Doom config.
 
 ** Eglot (LSP)
 
-Eglot is built into Emacs 29+ and is lighter than lsp-mode.  Your Doom
-config already uses =+eglot=, so this is a direct port.
+Eglot is built into Emacs 29+ and provides native LSP support.
 
 #+begin_src emacs-lisp
 (use-builtin eglot
@@ -595,7 +638,7 @@ config already uses =+eglot=, so this is a direct port.
         eglot-events-buffer-size 0))   ; disable event logging for performance
 #+end_src
 
-** Tree-Sitter
+** tree-sitter
 
 Emacs 29+ has native tree-sitter support.  The =treesit-auto= package
 automatically installs grammars and remaps major modes to their
@@ -611,7 +654,7 @@ automatically installs grammars and remaps major modes to their
   (global-treesit-auto-mode 1))
 #+end_src
 
-** Language Packages
+** Language packages
 
 These are only needed for languages that don't have built-in tree-sitter
 modes or need extra tooling (like cargo integration for Rust).
@@ -634,7 +677,7 @@ modes or need extra tooling (like cargo integration for Rust).
   :ensure (:wait t)
   :mode ("\\.md\\'" . markdown-mode))
 
-;; YAML / TOML / etc. — `data' formats from your Doom config.
+;; YAML and related data formats.
 ;; treesit-auto handles most of these, but explicit packages give
 ;; you better defaults.
 (use-package yaml-mode
@@ -642,7 +685,7 @@ modes or need extra tooling (like cargo integration for Rust).
   :mode "\\.ya?ml\\'")
 #+end_src
 
-* Terminal: Vterm
+* Terminal: vterm
 
 #+begin_src emacs-lisp
 (use-package vterm
@@ -677,10 +720,9 @@ modes or need extra tooling (like cargo integration for Rust).
   :hook (dired-mode . nerd-icons-dired-mode))
 #+end_src
 
-* Workspace / Tab Management
+* Workspace / tab management
 
-Doom's =workspaces= module wraps =tab-bar-mode=.  We use it directly with
-some quality-of-life keybindings.
+Workspace-style tab management using built-in =tab-bar-mode=.
 
 #+begin_src emacs-lisp
 (use-builtin tab-bar
@@ -701,7 +743,7 @@ some quality-of-life keybindings.
     "TAB 3" '((lambda () (interactive) (tab-bar-select-tab 3)) :wk "tab 3")))
 #+end_src
 
-* macOS Compatibility
+* macOS compatibility
 
 #+begin_src emacs-lisp
 (when (eq system-type 'darwin)
@@ -711,10 +753,9 @@ some quality-of-life keybindings.
         trash-directory "~/.Trash"))
 #+end_src
 
-* Pomodoro (Stub)
+* Pomodoro
 
-Your Doom config enables =+pomodoro= for org-mode.  The underlying
-package is =org-pomodoro=.
+Simple pomodoro workflow in org buffers.
 
 #+begin_src emacs-lisp
 (use-package org-pomodoro
@@ -725,19 +766,17 @@ package is =org-pomodoro=.
     "p" '(org-pomodoro :wk "pomodoro")))
 #+end_src
 
-* What's Not Here (Yet)
+* Ideas to add later
 
-A few things from your Doom config that are intentionally left out of
-this scaffold so you can add them as learning exercises:
+These items are still pending addition/porting from Doom:
 
 - *chezmoi integration*: Look at the =chezmoi.el= package.
 - *folding*: Investigate =hideshow= (built-in) or =origami=.
-- *popup management*: Doom's =+popup= system is one of its most complex
-  pieces.  Start with =display-buffer-alist= and =shackle= or =popper=.
-- *file templates*: Doom's template system uses yasnippet under the hood.
-  You can set up =auto-insert-mode= with yasnippet for the same effect.
+- *popup management*: Start with =display-buffer-alist= and =shackle= or
+  =popper=.
+- *file templates*: You can set up =auto-insert-mode= with yasnippet.
 - *LLM integration*: Look at =gptel= or =ellama= — both work with
-  multiple backends and are more transparent than Doom's =llm= module.
+  multiple backends.
 - *Spell checking*: =jinx= is a modern alternative to flyspell that uses
   enchant and is noticeably faster.
 - *Additional evil packages*: =evil-matchit= (%), =evil-lion= (alignment),

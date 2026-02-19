@@ -89,6 +89,10 @@ zstyle ':completion::complete:*' cache-path "${XDG_CACHE_HOME}/zsh/zcompcache"
 compdef _eza ls l ll ltr llm la lx lS lt
 {{- end }}
 
+{{- if eq .defaults.editor "emacs" }}
+export PATH="$XDG_CONFIG_HOME/emacs/bin:$PATH"
+{{- end }}
+
 # ============================================================================
 # Tools & aliases
 # ============================================================================
