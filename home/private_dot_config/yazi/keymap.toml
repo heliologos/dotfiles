@@ -1,0 +1,23 @@
+[manager]
+prepend_keymap = [
+  { on = "<C-j>", run = "arrow next", desc = "Move down (friendly Ctrl-j)" },
+  { on = "<C-k>", run = "arrow prev", desc = "Move up (friendly Ctrl-k)" },
+  { on = "<C-h>", run = "leave", desc = "Go to parent directory (friendly Ctrl-h)" },
+  { on = "<C-l>", run = "enter", desc = "Enter directory (friendly Ctrl-l)" },
+
+  { on = "<A-h>", run = "tab_switch -1 --relative", desc = "Previous tab (Alt-h)" },
+  { on = "<A-l>", run = "tab_switch 1 --relative", desc = "Next tab (Alt-l)" },
+  { on = "<A-n>", run = "tab_create --current", desc = "New tab with current directory" },
+
+  { on = "<A-1>", run = "tab_switch 0", desc = "Switch to tab 1" },
+  { on = "<A-2>", run = "tab_switch 1", desc = "Switch to tab 2" },
+  { on = "<A-3>", run = "tab_switch 2", desc = "Switch to tab 3" },
+  { on = "<A-4>", run = "tab_switch 3", desc = "Switch to tab 4" },
+  { on = "<A-5>", run = "tab_switch 4", desc = "Switch to tab 5" },
+  { on = "<A-6>", run = "tab_switch 5", desc = "Switch to tab 6" },
+  { on = "<A-7>", run = "tab_switch 6", desc = "Switch to tab 7" },
+  { on = "<A-8>", run = "tab_switch 7", desc = "Switch to tab 8" },
+  { on = "<A-9>", run = "tab_switch 8", desc = "Switch to tab 9" },
+
+  { on = [ "g", "?" ], run = "help", desc = "Open help" },
+]

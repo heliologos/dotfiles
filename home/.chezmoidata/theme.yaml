@@ -1,6 +1,9 @@
 theme:
   family: tokyo-night
   variant: storm
+  yazi:
+    dark: tokyonight-storm
+    light: tokyonight-day
   zellij: tokyo-night-storm
   nvim: tokyonight-storm
   ghostty:

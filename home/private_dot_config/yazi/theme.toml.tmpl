@@ -1,0 +1,7 @@
+{{- $theme := (index . "theme") | default dict -}}
+{{- $yazi := (index $theme "yazi") | default dict -}}
+{{- $yaziDark := (index $yazi "dark") | default "tokyonight-storm" -}}
+{{- $yaziLight := (index $yazi "light") | default "tokyonight-day" -}}
+[flavor]
+dark = "{{ $yaziDark }}"
+light = "{{ $yaziLight }}"

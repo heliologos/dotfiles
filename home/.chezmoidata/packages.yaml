@@ -3,12 +3,19 @@ packages:
     base:
       taps: []
       formulae:
+        - chafa
         - chezmoi
         - dockutil
         - eza
         - fd
+        - ffmpeg
+        - fzf
+        - imagemagick
         - lazygit
         - mise
+        - poppler
+        - resvg
+        - sevenzip
         - tealdeer
         - yazi
         - zellij
