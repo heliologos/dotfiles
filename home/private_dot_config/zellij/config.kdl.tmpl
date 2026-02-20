@@ -6,28 +6,39 @@ keybinds clear-defaults=true {
     locked {
         bind "Ctrl g" { SwitchToMode "normal"; }
         bind "Alt /" { Run "sh" "-lc" "sheet=${XDG_CONFIG_HOME:-$HOME/.config}/zellij/cheatsheet.md; if [ -r \"$sheet\" ]; then less -R \"$sheet\"; else printf 'Missing cheat sheet: %s\\n' \"$sheet\" | less -R; fi" { floating true; close_on_exit true; }; }
-        // One-key starter layouts from a single pane.
+        // Pane navigation while staying locked.
+        bind "Alt left" { MoveFocusOrTab "left"; }
+        bind "Alt down" { MoveFocus "down"; }
+        bind "Alt up" { MoveFocus "up"; }
+        bind "Alt right" { MoveFocusOrTab "right"; }
+        bind "Alt h" { MoveFocusOrTab "left"; }
+        bind "Alt j" { MoveFocus "down"; }
+        bind "Alt k" { MoveFocus "up"; }
+        bind "Alt l" { MoveFocusOrTab "right"; }
+        // Deterministic layout actions.
         bind "Alt g" {
-            NewPane "right";
-            MoveFocus "left";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
+            NewTab {
+                layout {
+                    pane split_direction="Vertical" {
+                        pane size="70%"
+                        pane
+                    }
+                }
+                name "main"
+            }
         }
         bind "Alt Shift g" {
-            NewPane "right";
-            MoveFocus "right";
-            NewPane "down";
-            MoveFocus "left";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
+            NewTab {
+                layout {
+                    pane split_direction="Vertical" {
+                        pane size="70%"
+                        pane
+                    }
+                }
+                name "main"
+            }
+            GoToPreviousTab;
+            CloseTab;
         }
         // Keep app-first behavior, but expose a small tab control layer in locked mode.
         bind "Alt 1" { GoToTab 1; }
@@ -42,7 +53,9 @@ keybinds clear-defaults=true {
         bind "Alt n" { NewTab; }
         bind "Alt p" { GoToPreviousTab; }
         bind "Alt ]" { GoToNextTab; }
-        bind "Alt x" { CloseTab; }
+        // Allow quick mode entry from locked without global close shortcuts.
+        bind "Alt w" { SwitchToMode "pane"; }
+        bind "Alt t" { SwitchToMode "tab"; }
     }
     pane {
         bind "left" { MoveFocus "left"; }
@@ -64,6 +77,7 @@ keybinds clear-defaults=true {
         bind "r" { NewPane "right"; SwitchToMode "normal"; }
         bind "s" { NewPane "stacked"; SwitchToMode "normal"; }
         bind "w" { ToggleFloatingPanes; SwitchToMode "normal"; }
+        bind "x" { CloseFocus; SwitchToMode "locked"; }
         bind "z" { TogglePaneFrames; SwitchToMode "normal"; }
     }
     tab {
@@ -91,7 +105,7 @@ keybinds clear-defaults=true {
         bind "r" { SwitchToMode "renametab"; TabNameInput 0; }
         bind "s" { ToggleActiveSyncTab; SwitchToMode "normal"; }
         bind "Alt t" { SwitchToMode "normal"; }
-        bind "x" { CloseTab; SwitchToMode "normal"; }
+        bind "x" { CloseTab; SwitchToMode "locked"; }
         bind "tab" { ToggleTab; }
     }
     resize {
@@ -178,26 +192,28 @@ keybinds clear-defaults=true {
     shared_except "locked" {
         bind "Alt /" { Run "sh" "-lc" "sheet=${XDG_CONFIG_HOME:-$HOME/.config}/zellij/cheatsheet.md; if [ -r \"$sheet\" ]; then less -R \"$sheet\"; else printf 'Missing cheat sheet: %s\\n' \"$sheet\" | less -R; fi" { floating true; close_on_exit true; }; }
         bind "Alt g" {
-            NewPane "right";
-            MoveFocus "left";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
+            NewTab {
+                layout {
+                    pane split_direction="Vertical" {
+                        pane size="70%"
+                        pane
+                    }
+                }
+                name "main"
+            }
         }
         bind "Alt Shift g" {
-            NewPane "right";
-            MoveFocus "right";
-            NewPane "down";
-            MoveFocus "left";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
-            Resize "Increase right";
+            NewTab {
+                layout {
+                    pane split_direction="Vertical" {
+                        pane size="70%"
+                        pane
+                    }
+                }
+                name "main"
+            }
+            GoToPreviousTab;
+            CloseTab;
         }
         bind "Alt left" { MoveFocusOrTab "left"; }
         bind "Alt down" { MoveFocus "down"; }
@@ -249,9 +265,6 @@ keybinds clear-defaults=true {
     }
     shared_except "normal" "locked" "entersearch" "renametab" "renamepane" {
         bind "esc" { SwitchToMode "normal"; }
-    }
-    shared_among "pane" "tmux" {
-        bind "x" { CloseFocus; SwitchToMode "normal"; }
     }
     shared_among "scroll" "search" {
         bind "PageDown" { PageScrollDown; }
@@ -307,6 +320,7 @@ keybinds clear-defaults=true {
         bind "n" { GoToNextTab; SwitchToMode "normal"; }
         bind "o" { FocusNextPane; }
         bind "p" { GoToPreviousTab; SwitchToMode "normal"; }
+        bind "x" { CloseFocus; SwitchToMode "normal"; }
         bind "z" { ToggleFocusFullscreen; SwitchToMode "normal"; }
     }
 }

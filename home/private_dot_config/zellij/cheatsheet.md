@@ -15,21 +15,24 @@ Modes and help
 
 Start here (new-user defaults)
 - `Alt-/`: open this page whenever you forget keys
-- `Alt-g`: make a quick 70/30 split (main pane left)
-- `Alt-Shift-g`: quick double split (main left + two right panes)
+- `Alt-g`: open a fresh `main` tab with exact 70/30 layout
+- `Alt-Shift-g`: replace current tab with exact 70/30 `main` layout
 
 Locked mode quick controls
+- `Alt-h/j/k/l`: move focus (left/down/up/right)
+- `Alt-Left/Down/Up/Right`: same as above
+- `Alt-w`: pane mode
+- `Alt-t`: tab mode
 - `Alt-1..9`: go to tab 1-9
 - `Alt-n`: new tab
 - `Alt-p`: previous tab
 - `Alt-]`: next tab
-- `Alt-x`: close current tab
 
 Shared controls (all unlocked modes)
 - `Alt-h/j/k/l`: move focus (left/down/up/right)
 - `Alt-Left/Down/Up/Right`: same as above
-- `Alt-g`: quick 70/30 split (main pane left)
-- `Alt-Shift-g`: quick double split (main left + two right panes)
+- `Alt-g`: open a fresh `main` tab with exact 70/30 layout
+- `Alt-Shift-g`: replace current tab with exact 70/30 `main` layout
 - `Alt-n`: new pane
 - `Alt-Shift-x`: close focused pane
 - `Alt-i` / `Alt-o`: move tab left/right
@@ -46,7 +49,7 @@ Pane mode (`Alt-w`)
 - `d`: split down
 - `r`: split right
 - `s`: split stacked
-- `x`: close focused pane
+- `x`: close focused pane and return to locked mode
 - `f`: toggle fullscreen
 - `w`: toggle floating panes
 - `e`: embed/floating for focused pane
@@ -58,7 +61,7 @@ Tab mode (`Alt-t`)
 - `h/j/k/l` or arrows: previous/next tab
 - `1..9`: jump to tab
 - `n`: new tab
-- `x`: close tab
+- `x`: close tab and return to locked mode
 - `r`: rename tab
 - `s`: toggle sync tab
 - `b`: break pane
