@@ -1,12 +1,14 @@
 return {
   "swaits/zellij-nav.nvim",
-  lazy = true,
   event = "VeryLazy",
+  cond = function()
+    return vim.env.ZELLIJ ~= nil
+  end,
   keys = {
-    { "<c-h>", "<cmd>ZellijNavigateLeftTab<cr>", { silent = true, desc = "navigate left or tab" } },
-    { "<c-j>", "<cmd>ZellijNavigateDown<cr>", { silent = true, desc = "navigate down" } },
-    { "<c-k>", "<cmd>ZellijNavigateUp<cr>", { silent = true, desc = "navigate up" } },
-    { "<c-l>", "<cmd>ZellijNavigateRightTab<cr>", { silent = true, desc = "navigate right or tab" } },
+    { "<C-h>", "<cmd>ZellijNavigateLeftTab<CR>", silent = true, desc = "Navigate left (pane/tab)" },
+    { "<C-j>", "<cmd>ZellijNavigateDown<CR>", silent = true, desc = "Navigate down" },
+    { "<C-k>", "<cmd>ZellijNavigateUp<CR>", silent = true, desc = "Navigate up" },
+    { "<C-l>", "<cmd>ZellijNavigateRightTab<CR>", silent = true, desc = "Navigate right (pane/tab)" },
   },
   opts = {},
 }

@@ -1,0 +1,10 @@
+{{- $theme := (index . "theme") | default dict -}}
+{{- $nvimTheme := (index $theme "nvim") | default "tokyonight-storm" -}}
+return {
+  {
+    "LazyVim/LazyVim",
+    opts = {
+      colorscheme = "{{ $nvimTheme }}",
+    },
+  },
+}

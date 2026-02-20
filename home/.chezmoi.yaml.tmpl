@@ -68,6 +68,8 @@ age:
   command: "rage"
   identity: {{ printf "%s/.config/chezmoi/key.txt" .chezmoi.homeDir | quote }}
   recipient: age10l3f3ldcx6s4jesnjmeksfuc086uftt732989np5vttg9nr8z5fsydymcx
+# Disable interactive paging for chezmoi output so command results stay in terminal scrollback.
+pager: {{ if lookPath "bat" }}"bat"{{ else }}"cat"{{ end }}
 data:
   name: {{ $name | quote }}
   email: {{ $email | quote }}

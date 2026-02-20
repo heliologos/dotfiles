@@ -1,0 +1,3 @@
+{{- $theme := (index . "theme") | default dict -}}
+{{- $batTheme := (index $theme "bat") | default "Monokai Extended" -}}
+--theme="{{ $batTheme }}"

@@ -102,6 +102,11 @@ if (( $+commands[mise] )); then
   eval "$(mise activate zsh)"
 fi
 
+# LLM defaults used by lazygit commit-message generation.
+export LAZYGIT_COMMIT_LLM_CMD="${LAZYGIT_COMMIT_LLM_CMD:-lazygit-commit-llm}"
+export LAZYGIT_CLAUDE_MODEL="${LAZYGIT_CLAUDE_MODEL:-sonnet}"
+export LAZYGIT_CODEX_MODEL="${LAZYGIT_CODEX_MODEL:-gpt-5-codex}"
+
 {{ if lookPath "zoxide" -}}
 eval "$(zoxide init zsh)"
 {{ end }}
@@ -114,4 +119,24 @@ y() {
 	[ "$cwd" != "$PWD" ] && [ -d "$cwd" ] && builtin cd -- "$cwd"
 	rm -f -- "$tmp"
 }
+{{- end }}
+
+# ============================================================================
+# Zellij auto-start
+# ============================================================================
+# Start zellij for interactive terminal sessions unless already inside another
+# multiplexer or command-driven interactive shell.
+{{ if lookPath "zellij" -}}
+if (( $+commands[zellij] )) \
+  && [[ -z "$ZELLIJ" ]] \
+  && [[ -z "$TMUX" ]] \
+  && [[ -z "$NVIM" ]] \
+  && [[ -z "$ZSH_EXECUTION_STRING" ]] \
+  && [[ "$TERM" != "dumb" ]] \
+  && [[ "$TERM_PROGRAM" != "vscode" ]] \
+  && [[ -t 0 ]] \
+  && [[ -t 1 ]]; then
+  zellij attach -c
+  exit $?
+fi
 {{ end }}

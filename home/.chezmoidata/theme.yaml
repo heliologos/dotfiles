@@ -1,0 +1,11 @@
+theme:
+  family: tokyo-night
+  variant: storm
+  zellij: tokyo-night-storm
+  nvim: tokyonight-storm
+  ghostty:
+    dark: TokyoNight Storm
+    light: TokyoNight Day
+  bat: Monokai Extended
+  delta:
+    syntax: Monokai Extended

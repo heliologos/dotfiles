@@ -47,7 +47,24 @@ fi
 
 export EDITOR="{{ .defaults.editor }}"
 export VISUAL="$EDITOR"
+{{ $theme := (index . "theme") | default dict -}}
+{{- $batTheme := (index $theme "bat") | default "Monokai Extended" -}}
+{{- $deltaTheme := ((index ((index $theme "delta") | default dict) "syntax")) | default "Monokai Extended" -}}
+export BAT_THEME="{{ $batTheme }}"
+{{ if lookPath "delta" -}}
+export PAGER="delta"
+export GIT_PAGER="delta"
+export LESS="-R -F -X -i -M"
+export MANPAGER="less -R"
+export DELTA_PAGER="less -R -F -X -i -M"
+export DELTA_FEATURES="side-by-side line-numbers"
+export DELTA_NAVIGATE="true"
+export DELTA_SYNTAX_THEME="{{ $deltaTheme }}"
+{{ else -}}
 export PAGER="less"
+export LESS="-R -F -X -i -M"
+export MANPAGER="less -R"
+{{ end -}}
 
 # ------------------------------------------------------------------------------
 # 5. Application XDG enforcement

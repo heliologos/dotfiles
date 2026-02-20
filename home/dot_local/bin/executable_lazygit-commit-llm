@@ -1,0 +1,47 @@
+#!/usr/bin/env sh
+set -eu
+
+prompt="${1:-Generate a git commit message for these changes.}"
+input_file="$(mktemp -t lazygit-commit-llm-input.XXXXXX)"
+prompt_file=""
+
+cleanup() {
+  rm -f "$input_file"
+  if [ -n "${prompt_file}" ]; then
+    rm -f "$prompt_file"
+  fi
+}
+trap cleanup EXIT INT TERM HUP
+
+cat >"$input_file"
+
+if command -v claude >/dev/null 2>&1; then
+  claude_model="${LAZYGIT_CLAUDE_MODEL:-sonnet}"
+  claude -p --model "$claude_model" "$prompt" <"$input_file"
+  exit $?
+fi
+
+if command -v codex >/dev/null 2>&1; then
+  prompt_file="$(mktemp -t lazygit-commit-llm-prompt.XXXXXX)"
+  {
+    printf '%s\n\n' "$prompt"
+    printf 'Use only the staged diff below as context.\n\n'
+    cat "$input_file"
+  } >"$prompt_file"
+
+  codex_model="${LAZYGIT_CODEX_MODEL:-gpt-5-codex}"
+  if codex exec --model "$codex_model" - <"$prompt_file"; then
+    exit 0
+  fi
+
+  codex exec - <"$prompt_file"
+  exit $?
+fi
+
+if command -v llm >/dev/null 2>&1; then
+  llm "$prompt" <"$input_file"
+  exit $?
+fi
+
+printf '%s\n' "No supported LLM CLI found (tried: claude, codex, llm)." >&2
+exit 127
