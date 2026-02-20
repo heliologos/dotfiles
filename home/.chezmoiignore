@@ -8,6 +8,10 @@
 {{- if not .flags.is_work_owned }}
 .config/git/config-work
 {{- end }}
+.config/zsh/work-local.zsh.age
+{{- if not .flags.is_work_owned }}
+.config/zsh/work-local.zsh
+{{- end }}
 key.txt.age
 {{- if not (has "iterm2" .programs.terminals) }}
 .config/iterm2

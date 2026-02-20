@@ -140,3 +140,12 @@ if (( $+commands[zellij] )) \
   exit $?
 fi
 {{ end }}
+
+# ============================================================================
+# Work-local overrides
+# ============================================================================
+
+{{- if .flags.is_work_owned }}
+local work_local_zshrc="$ZDOTDIR/zsh/work-local.zsh"
+[[ -f "$work_local_zshrc" ]] && source "$work_local_zshrc"
+{{- end }}
