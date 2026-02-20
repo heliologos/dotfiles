@@ -6,6 +6,29 @@ keybinds clear-defaults=true {
     locked {
         bind "Ctrl g" { SwitchToMode "normal"; }
         bind "Alt /" { Run "sh" "-lc" "sheet=${XDG_CONFIG_HOME:-$HOME/.config}/zellij/cheatsheet.md; if [ -r \"$sheet\" ]; then less -R \"$sheet\"; else printf 'Missing cheat sheet: %s\\n' \"$sheet\" | less -R; fi" { floating true; close_on_exit true; }; }
+        // One-key starter layouts from a single pane.
+        bind "Alt g" {
+            NewPane "right";
+            MoveFocus "left";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+        }
+        bind "Alt Shift g" {
+            NewPane "right";
+            MoveFocus "right";
+            NewPane "down";
+            MoveFocus "left";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+        }
         // Keep app-first behavior, but expose a small tab control layer in locked mode.
         bind "Alt 1" { GoToTab 1; }
         bind "Alt 2" { GoToTab 2; }
@@ -154,6 +177,28 @@ keybinds clear-defaults=true {
     }
     shared_except "locked" {
         bind "Alt /" { Run "sh" "-lc" "sheet=${XDG_CONFIG_HOME:-$HOME/.config}/zellij/cheatsheet.md; if [ -r \"$sheet\" ]; then less -R \"$sheet\"; else printf 'Missing cheat sheet: %s\\n' \"$sheet\" | less -R; fi" { floating true; close_on_exit true; }; }
+        bind "Alt g" {
+            NewPane "right";
+            MoveFocus "left";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+        }
+        bind "Alt Shift g" {
+            NewPane "right";
+            MoveFocus "right";
+            NewPane "down";
+            MoveFocus "left";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+            Resize "Increase right";
+        }
         bind "Alt left" { MoveFocusOrTab "left"; }
         bind "Alt down" { MoveFocus "down"; }
         bind "Alt up" { MoveFocus "up"; }

@@ -13,6 +13,11 @@ Modes and help
 - `Alt-s`: session mode
 - `Esc` or `Enter`: return to normal mode
 
+Start here (new-user defaults)
+- `Alt-/`: open this page whenever you forget keys
+- `Alt-g`: make a quick 70/30 split (main pane left)
+- `Alt-Shift-g`: quick double split (main left + two right panes)
+
 Locked mode quick controls
 - `Alt-1..9`: go to tab 1-9
 - `Alt-n`: new tab
@@ -23,6 +28,8 @@ Locked mode quick controls
 Shared controls (all unlocked modes)
 - `Alt-h/j/k/l`: move focus (left/down/up/right)
 - `Alt-Left/Down/Up/Right`: same as above
+- `Alt-g`: quick 70/30 split (main pane left)
+- `Alt-Shift-g`: quick double split (main left + two right panes)
 - `Alt-n`: new pane
 - `Alt-Shift-x`: close focused pane
 - `Alt-i` / `Alt-o`: move tab left/right
