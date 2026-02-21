@@ -1,8 +1,19 @@
 [user]
+{{- if eq .defaults.password_manager "secretive" }}
+  signingkey = key::{{ .signing_key }}
+{{- else }}
   signingkey = {{ .signing_key }}
+{{- end }}
 
 [gpg]
   format = ssh
 
+{{- if eq .defaults.password_manager "secretive" }}
+[gpg "ssh"]
+  program = "{{ .chezmoi.homeDir }}/.local/bin/git-ssh-sign-secretive"
+{{- end }}
+
+{{- if eq .defaults.password_manager "1password" }}
 [gpg "ssh"]
   program = "/Applications/1Password.app/Contents/MacOS/op-ssh-sign"
+{{- end }}

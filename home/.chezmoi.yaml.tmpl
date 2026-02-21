@@ -1,12 +1,22 @@
 {{- $ownershipChoices := list "personal" "work_flex" "work_strict" -}}
-{{- $ownership := promptChoiceOnce . "ownership" "Who owns this system" $ownershipChoices "personal" -}}
+{{- $existingDefaults := (index . "defaults") | default dict -}}
+{{- $existingPrograms := (index . "programs") | default dict -}}
+{{- $existingOwnership := (index . "ownership") | default "" -}}
+{{- $ownership := or (env "CHEZMOI_OWNERSHIP") $existingOwnership -}}
+{{- if eq $ownership "" -}}
+  {{- $ownership = promptChoiceOnce . "ownership" "Who owns this system" $ownershipChoices "personal" -}}
+{{- end -}}
 
 {{- if not (has $ownership $ownershipChoices) -}}
   {{- $ownership = "personal" -}}
 {{- end -}}
 
 {{- $profileChoices := list "portable" "rig" "server" -}}
-{{- $profile := promptChoiceOnce . "profile" "Which system profile is this" $profileChoices "portable" -}}
+{{- $existingProfile := (index . "profile") | default "" -}}
+{{- $profile := or (env "CHEZMOI_PROFILE") $existingProfile -}}
+{{- if eq $profile "" -}}
+  {{- $profile = promptChoiceOnce . "profile" "Which system profile is this" $profileChoices "portable" -}}
+{{- end -}}
 
 {{- if not (has $profile $profileChoices) -}}
   {{- $profile = "portable" -}}
@@ -18,30 +28,64 @@
 {{- $name := "" -}}
 {{- $email := "" -}}
 {{- if $isWorkOwned -}}
-  {{- $name = or (env "WORK_NAME") (promptStringOnce . "name" "What is your work name") -}}
-  {{- $email = or (env "WORK_EMAIL") (promptStringOnce . "email" "What is your work email") -}}
+  {{- $name = or (env "WORK_NAME") (env "CHEZMOI_NAME") ((index . "name") | default "") -}}
+  {{- $email = or (env "WORK_EMAIL") (env "CHEZMOI_EMAIL") ((index . "email") | default "") -}}
+  {{- if eq $name "" -}}
+    {{- $name = promptStringOnce . "name" "What is your work name" -}}
+  {{- end -}}
+  {{- if eq $email "" -}}
+    {{- $email = promptStringOnce . "email" "What is your work email" -}}
+  {{- end -}}
 {{- else -}}
-  {{- $name = "heliologos" -}}
-  {{- $email = "sol@hey.com" -}}
+  {{- $name = or (env "CHEZMOI_NAME") ((index . "name") | default "") "heliologos" -}}
+  {{- $email = or (env "CHEZMOI_EMAIL") ((index . "email") | default "") "sol@hey.com" -}}
 {{- end -}}
 
 {{- $availableShells := list "zsh" "fish" "nushell" -}}
 {{- $availableBrowsers := list "brave" "safari" -}}
 {{- $availableTerminals := list "ghostty" "kitty" "alacritty" "wezterm" "iterm2" -}}
 {{- $availableEditors := list "nvim" "vim" "emacs" "vscode" "zed" -}}
-{{- $availablePasswordManagers := list "1password" "bitwarden" "proton-pass" -}}
+{{- $availablePasswordManagers := list "1password" "secretive" "bitwarden" "proton-pass" -}}
 {{- $availableToolchains := list "mise" "go" "node" "python" "rust" -}}
 {{- $capacityChoices := list "gaming" "development" "media" -}}
 
 {{- /* default programs: single choice per category */ -}}
 {{- $shell := "zsh" -}}
-{{- $browser := promptChoiceOnce . "defaults.browser" "Default browser" $availableBrowsers "brave" -}}
-{{- $terminal := promptChoiceOnce . "defaults.terminal" "Primary terminal" $availableTerminals "iterm2" -}}
-{{- $editor := promptChoiceOnce . "defaults.editor" "Primary editor" $availableEditors "nvim" -}}
-{{- $passwordManager := promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
+{{- $browser := or (env "CHEZMOI_DEFAULT_BROWSER") ((index $existingDefaults "browser") | default "") -}}
+{{- if eq $browser "" -}}
+  {{- $browser = promptChoiceOnce . "defaults.browser" "Default browser" $availableBrowsers "brave" -}}
+{{- end -}}
+{{- $terminal := or (env "CHEZMOI_DEFAULT_TERMINAL") ((index $existingDefaults "terminal") | default "") -}}
+{{- if eq $terminal "" -}}
+  {{- $terminal = promptChoiceOnce . "defaults.terminal" "Primary terminal" $availableTerminals "iterm2" -}}
+{{- end -}}
+{{- $editor := or (env "CHEZMOI_DEFAULT_EDITOR") ((index $existingDefaults "editor") | default "") -}}
+{{- if eq $editor "" -}}
+  {{- $editor = promptChoiceOnce . "defaults.editor" "Primary editor" $availableEditors "nvim" -}}
+{{- end -}}
+{{- $passwordManager := or (env "CHEZMOI_DEFAULT_PASSWORD_MANAGER") ((index $existingDefaults "password_manager") | default "") -}}
+{{- if eq $passwordManager "" -}}
+  {{- $passwordManager = promptChoiceOnce . "defaults.password_manager" "Primary password manager" $availablePasswordManagers "1password" -}}
+{{- end -}}
+
+{{- if not (has $browser $availableBrowsers) -}}
+  {{- $browser = "brave" -}}
+{{- end -}}
+{{- if not (has $terminal $availableTerminals) -}}
+  {{- $terminal = "iterm2" -}}
+{{- end -}}
+{{- if not (has $editor $availableEditors) -}}
+  {{- $editor = "nvim" -}}
+{{- end -}}
+{{- if not (has $passwordManager $availablePasswordManagers) -}}
+  {{- $passwordManager = "1password" -}}
+{{- end -}}
 
 {{- /* optional programs: multiple selections */ -}}
-{{- $enabledCapacitiesRaw := promptMultichoiceOnce . "capacities" "Enable capacities" $capacityChoices (list $defaultCapacity) -}}
+{{- $enabledCapacitiesRaw := (index . "capacities") | default (list) -}}
+{{- if eq (len $enabledCapacitiesRaw) 0 -}}
+  {{- $enabledCapacitiesRaw = promptMultichoiceOnce . "capacities" "Enable capacities" $capacityChoices (list $defaultCapacity) -}}
+{{- end -}}
 {{- $enabledCapacities := list -}}
 {{- range $enabledCapacitiesRaw -}}
   {{- if has . $capacityChoices -}}
@@ -51,11 +95,26 @@
 {{- if eq (len $enabledCapacities) 0 -}}
   {{- $enabledCapacities = list $defaultCapacity -}}
 {{- end -}}
-{{- $enabledShells := promptMultichoiceOnce . "programs.shells" "Enable shells" $availableShells (list $shell) -}}
-{{- $enabledPasswordManagers := promptMultichoiceOnce . "programs.password_managers" "Enable password managers" $availablePasswordManagers (list $passwordManager) -}}
-{{- $enabledTerminals := promptMultichoiceOnce . "programs.terminals" "Enable terminals" $availableTerminals (list $terminal) -}}
-{{- $enabledEditors := promptMultichoiceOnce . "programs.editors" "Enable editors" $availableEditors (list $editor) -}}
-{{- $enabledToolchains := promptMultichoiceOnce . "toolchains" "Enable language toolchains" $availableToolchains (list) -}}
+{{- $enabledShells := (index $existingPrograms "shells") | default (list) -}}
+{{- if eq (len $enabledShells) 0 -}}
+  {{- $enabledShells = promptMultichoiceOnce . "programs.shells" "Enable shells" $availableShells (list $shell) -}}
+{{- end -}}
+{{- $enabledPasswordManagers := (index $existingPrograms "password_managers") | default (list) -}}
+{{- if eq (len $enabledPasswordManagers) 0 -}}
+  {{- $enabledPasswordManagers = promptMultichoiceOnce . "programs.password_managers" "Enable password managers" $availablePasswordManagers (list $passwordManager) -}}
+{{- end -}}
+{{- $enabledTerminals := (index $existingPrograms "terminals") | default (list) -}}
+{{- if eq (len $enabledTerminals) 0 -}}
+  {{- $enabledTerminals = promptMultichoiceOnce . "programs.terminals" "Enable terminals" $availableTerminals (list $terminal) -}}
+{{- end -}}
+{{- $enabledEditors := (index $existingPrograms "editors") | default (list) -}}
+{{- if eq (len $enabledEditors) 0 -}}
+  {{- $enabledEditors = promptMultichoiceOnce . "programs.editors" "Enable editors" $availableEditors (list $editor) -}}
+{{- end -}}
+{{- $enabledToolchains := (index . "toolchains") | default (list) -}}
+{{- if eq (len $enabledToolchains) 0 -}}
+  {{- $enabledToolchains = promptMultichoiceOnce . "toolchains" "Enable language toolchains" $availableToolchains (list) -}}
+{{- end -}}
 
 {{- $xdgConfigHome := env "XDG_CONFIG_HOME" | default (printf "%s/.config" .chezmoi.homeDir) -}}
 {{- $xdgCacheHome := env "XDG_CACHE_HOME" | default (printf "%s/.cache" .chezmoi.homeDir) -}}
@@ -73,7 +132,7 @@ pager: {{ if lookPath "bat" }}"bat"{{ else }}"cat"{{ end }}
 data:
   name: {{ $name | quote }}
   email: {{ $email | quote }}
-  signing_key: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIH3h9tju97PYWlIax2f6vDPgj8kT3hmcvZGHf5CR0kXI"
+  signing_key: "ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBBSCvAK0qU7SE790815rs/DCb3J6/TZXtZCn3KU6Qf5FEsYInhqyjuZJVp6I7cMLYIT6AVMgyZdtQ4phrNieqWE="
   ownership: {{ $ownership | quote }}
   profile: {{ $profile | quote }}
   capacities: {{ $enabledCapacities | toJson }}
