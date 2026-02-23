@@ -184,6 +184,12 @@ defaults_launchpad() {
 }
 
 defaults_mail() {
+  local mail_container="${HOME}/Library/Containers/com.apple.mail"
+  if [[ ! -d "${mail_container}" ]]; then
+    echo "Mail.app container not found; skipping mail defaults." >&2
+    return 0
+  fi
+
   # Copy email addresses as plain addresses in Mail.app.
   defaults write com.apple.mail AddressesIncludeNameOnPasteboard -bool false
 

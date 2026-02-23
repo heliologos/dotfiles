@@ -6,8 +6,8 @@ if [ "${DOTFILES_DEBUG:-}" = "1" ] || [ "${DOTFILES_DEBUG:-}" = "true" ]; then
   set -x
 fi
 
-DEFAULT_DOTFILES_REPO_URL="https://github.com/heliologos/dotfiles"
-LOCAL_DOTFILES_REPO_URL="git@github.com:heliologos/dotfiles.git"
+DEFAULT_DOTFILES_REPO_URL="https://github.com/tarmuid/dotfiles"
+LOCAL_DOTFILES_REPO_URL="git@github.com:tarmuid/dotfiles.git"
 DEFAULT_DOTFILES_BRANCH="master"
 
 log() {
@@ -112,7 +112,7 @@ decrypt_age_identity() {
       set out $env(CHEZMOI_EXPECT_OUT)
       set src $env(CHEZMOI_EXPECT_SRC)
       set pass $env(CHEZMOI_EXPECT_PASS)
-      spawn -noecho $cmd age decrypt --passphrase --output $out $src
+      spawn -noecho $cmd age decrypt --use-builtin-age true --passphrase --output $out $src
       expect {
         timeout { exit 124 }
         -nocase -re "enter passphrase: ?" {
@@ -130,9 +130,9 @@ decrypt_age_identity() {
   else
     # Fallback to native prompt behavior if expect is unavailable.
     if [ -t 0 ]; then
-      "${chezmoi_cmd}" age decrypt --passphrase --output "${age_identity}" "${source_age_identity}"
+      "${chezmoi_cmd}" age decrypt --use-builtin-age true --passphrase --output "${age_identity}" "${source_age_identity}"
     elif [ -r /dev/tty ]; then
-      "${chezmoi_cmd}" age decrypt --passphrase --output "${age_identity}" "${source_age_identity}" </dev/tty
+      "${chezmoi_cmd}" age decrypt --use-builtin-age true --passphrase --output "${age_identity}" "${source_age_identity}" </dev/tty
     else
       die "cannot prompt for age passphrase (no TTY available)"
     fi
@@ -200,6 +200,9 @@ ensure_age_identity() {
   if [ -n "${source_age_identity}" ]; then
     log "age identity was not found. Decrypting ${source_age_identity}..."
     decrypt_age_identity "${chezmoi_cmd}" "${source_age_identity}" "${age_identity}"
+    if [ ! -s "${age_identity}" ]; then
+      die "age identity decryption produced an empty file: ${age_identity}"
+    fi
     chmod 600 "${age_identity}" 2>/dev/null || true
     printf '%s\n' "${age_identity}"
     return 0
@@ -226,16 +229,27 @@ resolve_age_recipient() {
 main() {
   dotfiles_repo="$(resolve_dotfiles_repo "${1:-}")"
   dotfiles_branch="${DOTFILES_BRANCH:-${DEFAULT_DOTFILES_BRANCH}}"
+
+  log "[1/5] Ensuring chezmoi is installed..."
   chezmoi_cmd="$(ensure_chezmoi)"
+
+  log "[2/5] Initializing dotfiles from ${dotfiles_repo} (branch: ${dotfiles_branch})..."
   "${chezmoi_cmd}" init --branch "${dotfiles_branch}" "${dotfiles_repo}"
+
+  log "[3/5] Resolving chezmoi source directory..."
   source_dir="$("${chezmoi_cmd}" source-path)"
+
+  log "[4/5] Ensuring age encryption identity..."
   age_identity="$(ensure_age_identity "${chezmoi_cmd}" "${source_dir}")"
   age_recipient="$(resolve_age_recipient "${chezmoi_cmd}" "${age_identity}")"
 
   export CHEZMOI_AGE_IDENTITY="${age_identity}"
   export CHEZMOI_AGE_RECIPIENT="${age_recipient}"
 
+  log "[5/5] Applying dotfiles..."
   "${chezmoi_cmd}" apply
+
+  log "Bootstrap complete."
 }
 
 main "$@"

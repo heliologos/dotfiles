@@ -37,8 +37,8 @@
     {{- $email = promptStringOnce . "email" "What is your work email" -}}
   {{- end -}}
 {{- else -}}
-  {{- $name = or (env "CHEZMOI_NAME") ((index . "name") | default "") "heliologos" -}}
-  {{- $email = or (env "CHEZMOI_EMAIL") ((index . "email") | default "") "sol@hey.com" -}}
+  {{- $name = or (env "CHEZMOI_NAME") ((index . "name") | default "") "tarmuid" -}}
+  {{- $email = or (env "CHEZMOI_EMAIL") ((index . "email") | default "") "tarmuid@roslev.net" -}}
 {{- end -}}
 
 {{- $availableShells := list "zsh" "fish" "nushell" -}}
@@ -124,7 +124,9 @@
 
 encryption: age
 age:
+{{- if lookPath "rage" }}
   command: "rage"
+{{- end }}
   identity: {{ printf "%s/.config/chezmoi/key.txt" .chezmoi.homeDir | quote }}
   recipient: age10l3f3ldcx6s4jesnjmeksfuc086uftt732989np5vttg9nr8z5fsydymcx
 # Disable interactive paging for chezmoi output so command results stay in terminal scrollback.
